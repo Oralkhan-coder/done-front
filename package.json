@@ -8,8 +8,7 @@
         "generate": "nuxt generate",
         "preview": "nuxt preview --port 4200",
         "postinstall": "nuxt prepare",
-        "prettier": "prettier . --write",
-        "lint": "eslint . --fix"
+        "prettier": "prettier . --write"
     },
     "dependencies": {
         "@nuxt/eslint": "^1.12.1",
@@ -18,7 +17,6 @@
         "@pinia/nuxt": "^0.11.3",
         "@primeuix/themes": "^2.0.2",
         "@primevue/nuxt-module": "^4.5.4",
-        "eslint": "^9.39.2",
         "nuxt": "^4.2.2",
         "pinia": "^3.0.4",
         "primevue": "^4.5.4",
@@ -27,7 +25,6 @@
     },
     "devDependencies": {
         "@iconify-json/carbon": "^1.2.18",
-        "eslint-config-prettier": "^10.1.8",
         "prettier": "3.8.0"
     }
 }

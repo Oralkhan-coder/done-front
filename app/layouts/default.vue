@@ -13,16 +13,16 @@
             </div>
 
             <nav class="nav-links">
-                <NuxtLink to="/" class="nav-item">
-                    <Button :label="isCollapsed ? '' : 'Home'" class="w-full">
+                <NuxtLink to="/" class="nav-item p-0 m-0">
+                    <Button :label="isCollapsed ? '' : 'Home'" class="w-full m-0">
                         <template #icon>
                             <Icon name="carbon:home" :class="{ 'mr-2': !isCollapsed }" />
                         </template>
                     </Button>
                 </NuxtLink>
 
-                <NuxtLink to="/projects" class="nav-item">
-                    <Button :label="isCollapsed ? '' : 'Project'" class="w-full">
+                <NuxtLink to="/projects" class="nav-item p-0 m-0">
+                    <Button :label="isCollapsed ? '' : 'Project'" class="w-full m-0">
                         <template #icon>
                             <Icon name="carbon:layers" :class="{ 'mr-2': !isCollapsed }" />
                         </template>
