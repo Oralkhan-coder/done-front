@@ -30,8 +30,8 @@
             <Column header="Actions" style="width: 120px">
                 <template #body="slotProps">
                     <div class="flex gap-2">
-                        <Button text rounded aria-label="Edit">
-                            <Icon name="carbon:magic-wand-filled" size="20px" @click="openEditModal(slotProps.data)" />
+                        <Button text rounded aria-label="Edit" @click="openEditModal(slotProps.data)">
+                            <Icon name="carbon:magic-wand-filled" size="20px" />
                         </Button>
 
                         <Button @click.prevent="projectStore.deleteProject(slotProps.data)" text rounded
