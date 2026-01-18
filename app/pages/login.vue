@@ -16,7 +16,7 @@
                         placeholder="name@company.com"
                         class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                         required
-                    >
+                    />
                 </div>
 
                 <div>
@@ -27,16 +27,16 @@
                     <input
                         id="password"
                         v-model="authStore.credentials.password"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                         type="password"
                         placeholder="••••••••"
-                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                         required
-                    >
+                    />
                 </div>
 
                 <button
-                    type="submit"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-[0.98]"
+                    type="submit"
                     @click.prevent="authStore.login(authStore.credentials)"
                 >
                     Sign In
