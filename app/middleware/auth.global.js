@@ -1,13 +1,13 @@
 export default defineNuxtRouteMiddleware((to) => {
-  const authStore = useAuthStore()
+    const authStore = useAuthStore();
 
-  const publicRoutes = ['/login', '/register']
-  
-  if (!authStore.isAuthenticated && !publicRoutes.includes(to.path)) {
-    return navigateTo('/login')
-  }
+    const publicRoutes = ['/login', '/register'];
 
-  if (authStore.isAuthenticated && publicRoutes.includes(to.path)) {
-    return navigateTo('/')
-  }
-})
+    if (!authStore.isAuthenticated && !publicRoutes.includes(to.path)) {
+        return navigateTo('/login');
+    }
+
+    if (authStore.isAuthenticated && publicRoutes.includes(to.path)) {
+        return navigateTo('/');
+    }
+});

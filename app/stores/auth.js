@@ -1,30 +1,30 @@
-export const useAuthStore = defineStore("auth", () => {
-    const credentials = useState("user", () => {
+export const useAuthStore = defineStore('auth', () => {
+    const credentials = useState('user', () => {
         return {
             email: '',
-            password: ''
+            password: '',
         };
     });
-    const accessToken = useCookie("access_token", {
+    const accessToken = useCookie('access_token', {
         maxAge: 60 * 60 * 24 * 7,
-        sameSite: "lax",
+        sameSite: 'lax',
     });
     const isAuthenticated = computed(() => !!accessToken.value);
 
     const login = async (credentials) => {
-        const data = await $fetch("http://localhost:3000/login", {
-            method: "POST",
+        const data = await $fetch('http://localhost:3000/login', {
+            method: 'POST',
             body: credentials,
         });
 
         accessToken.value = data.accessToken;
-        return navigateTo("/");
+        return navigateTo('/');
     };
 
     const logout = () => {
         accessToken.value = null;
-        return navigateTo("/login");
+        return navigateTo('/login');
     };
 
-    return { user, accessToken, isAuthenticated, login, logout };
+    return { credentials, accessToken, isAuthenticated, login, logout };
 });

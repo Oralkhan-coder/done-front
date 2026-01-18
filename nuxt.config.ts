@@ -1,16 +1,16 @@
-import Aura from "@primeuix/themes/aura";
+import Aura from '@primeuix/themes/aura';
 
 export default defineNuxtConfig({
-    compatibilityDate: "2025-07-15",
+    compatibilityDate: '2025-07-15',
     devtools: { enabled: true },
-    modules: ["@nuxtjs/tailwindcss", "@primevue/nuxt-module", "@nuxt/icon", "@pinia/nuxt"],
+    modules: ['@nuxtjs/tailwindcss', '@primevue/nuxt-module', '@nuxt/icon', '@pinia/nuxt', '@nuxt/eslint'],
 
     primevue: {
         options: {
             theme: {
                 preset: Aura,
                 options: {
-                    darkModeSelector: "none",
+                    darkModeSelector: 'none',
                 },
             },
         },
@@ -18,7 +18,7 @@ export default defineNuxtConfig({
 
     icon: {
         serverBundle: {
-            collections: ["carbon"],
+            collections: ['carbon'],
         },
     },
 });

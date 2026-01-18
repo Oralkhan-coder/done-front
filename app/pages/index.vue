@@ -1,11 +1,7 @@
 <template>
-	<div class="bg-red-400">
-		Hello World
-	</div>
+    <div class="bg-red-400">Hello World</div>
 </template>
 
-<script setup>
-
-</script>
+<script setup></script>
 
 <style></style>
