@@ -1,14 +1,19 @@
 <template>
     <div>
+        <Button label='Create' class="p-1 px-4 mb-4">
+            <template #icon>
+                <Icon name="carbon:add-alt" />
+            </template>
+        </Button>
         <DataTable :value="projectStore.projects" table-style="min-width: 50rem">
-            <Column field="code" header="Code">
+            <Column field="title" header="Title">
                 <template #body="slotProps">
-                    <NuxtLink :to="{ name: 'projects-id', params: { id: slotProps.data.id } }">
-                        {{ slotProps.data.code }}
+                    <NuxtLink :to="{ name: 'projects-id-boards', params: { id: slotProps.data.id } }">
+                        {{ slotProps.data.title }}
                     </NuxtLink>
                 </template>
             </Column>
-            <Column field="title" header="Title" />
+            <Column field="code" header="Code" />
             <Column field="createdAt" header="Created Date">
                 <template #body="slotProps">
                     {{ formatTime(slotProps.data.createdAt) }}
@@ -18,7 +23,7 @@
                 <template #body="slotProps">
                     <div class="flex gap-2">
                         <Button text rounded aria-label="Edit">
-                            <Icon name="carbon:pen" size="20px" />
+                            <Icon name="carbon:magic-wand-filled" size="20px" />
                         </Button>
 
                         <Button text rounded severity="danger" aria-label="Delete">
