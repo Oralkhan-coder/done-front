@@ -1,37 +1,37 @@
 <template>
-  <div class="w-1/2 min-h-1/2 bg-gray-50 rounded-lg">
-    <div class=" p-4 mb-5">
-      <div class="w-full mb-2">
-        <FloatLabel variant="on" class="w-full">
-          <InputText id="title" v-model="project.title" class="w-full" />
-          <label for="title">Title</label>
-        </FloatLabel>
-      </div>
+  <div class="w-full">
+    <form @submit.prevent="updateProject" class="space-y-6">
+      <div class="grid gap-6">
+        <div class="space-y-1.5">
+          <label for="edit-title" class="block text-sm font-medium text-slate-700">Project Title</label>
+          <InputText id="edit-title" v-model="project.title"
+            class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500" />
+        </div>
 
-      <div class="w-full mb-2">
-        <FloatLabel variant="on" class="w-full">
-          <InputText id="code" v-model="project.code" class="w-full" />
-          <label for="code">Code</label>
-        </FloatLabel>
-      </div>
+        <div class="space-y-1.5">
+          <label for="edit-code" class="block text-sm font-medium text-slate-700">Project Code</label>
+          <InputText id="edit-code" v-model="project.code"
+            class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500 uppercase" />
+        </div>
 
-      <div class="w-full mb-2">
-        <FloatLabel variant="on" class="w-full">
-          <Textarea id="description" v-model="project.description" rows="5" cols="30" class="w-full"
+        <div class="space-y-1.5">
+          <label for="edit-description" class="block text-sm font-medium text-slate-700">Description</label>
+          <Textarea id="edit-description" v-model="project.description" rows="5"
+            class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500"
             style="resize: none" />
-          <label for="description">Description</label>
-        </FloatLabel>
+        </div>
       </div>
 
-      <div class="w-full flex items-center gap-2 mt-3">
-        <Button label="Submit" class="flex-1 cursor-pointer w-full" @click="updateProject(project)" />
+      <div class="flex items-center justify-end pt-2">
+        <Button type="submit" label="Save Changes" icon="carbon:save"
+          class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" />
       </div>
-    </div>
+    </form>
   </div>
 </template>
 
 <script setup>
-const { project } = defineProps({
+const props = defineProps({
   project: {
     type: Object,
     required: true
@@ -40,9 +40,7 @@ const { project } = defineProps({
 
 const emits = defineEmits(['updateproject'])
 
-const updateProject = async () => {
-  emits('updateproject', project)
+const updateProject = () => {
+  emits('updateproject', props.project)
 }
 </script>
-
-<style></style>
