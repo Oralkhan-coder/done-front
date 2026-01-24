@@ -1,0 +1,317 @@
+<template>
+    <Teleport to="body">
+        <Transition name="modal">
+            <div v-if="isOpen" class="modal-overlay" @click.self="handleClose">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Create Task</h2>
+                        <button class="close-btn" @click="handleClose">
+                            <Icon name="carbon:close" size="24" />
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="handleSubmit" class="modal-body">
+                        <div class="form-group">
+                            <label for="task-title" class="form-label required">Title</label>
+                            <InputText id="task-title" v-model="formData.title" placeholder="Enter task title"
+                                class="w-full" :class="{ 'p-invalid': errors.title }" />
+                            <small v-if="errors.title" class="error-message">{{ errors.title }}</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-description" class="form-label">Description</label>
+                            <Textarea id="task-description" v-model="formData.description"
+                                placeholder="Add a description..." rows="4" class="w-full" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-type" class="form-label">Type</label>
+                                <Select id="task-type" v-model="formData.type" :options="taskTypes" optionLabel="label"
+                                    optionValue="value" placeholder="Select type" class="w-full" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="task-priority" class="form-label">Priority</label>
+                                <Select id="task-priority" v-model="formData.priority" :options="priorities"
+                                    optionLabel="label" optionValue="value" placeholder="Select priority"
+                                    class="w-full" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-assignee" class="form-label">Assignee</label>
+                                <InputText id="task-assignee" v-model="formData.assigneeName"
+                                    placeholder="Assignee name" class="w-full" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="task-due-date" class="form-label">Due Date</label>
+                                <Calendar id="task-due-date" v-model="formData.dueDate" dateFormat="yy-mm-dd"
+                                    placeholder="Select date" class="w-full" showIcon />
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <Button label="Cancel" severity="secondary" outlined @click="handleClose" type="button" />
+                            <Button label="Create Task" icon="carbon:add" :loading="isSubmitting" type="submit"
+                                class="bg-indigo-600 border-indigo-600" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+</template>
+
+<script setup>
+const props = defineProps({
+    isOpen: {
+        type: Boolean,
+        default: false,
+    },
+    statusId: {
+        type: Number,
+        required: true,
+    },
+});
+
+const emit = defineEmits(['close', 'submit']);
+
+const route = useRoute();
+const boardStore = useBoardStore();
+
+// Form data
+const formData = reactive({
+    title: '',
+    description: '',
+    type: 'task',
+    priority: 'medium',
+    assigneeName: '',
+    dueDate: null,
+});
+
+const errors = reactive({
+    title: '',
+});
+
+const isSubmitting = ref(false);
+
+// Options
+const taskTypes = [
+    { label: 'Task', value: 'task' },
+    { label: 'Bug', value: 'bug' },
+    { label: 'Feature', value: 'feature' },
+    { label: 'Story', value: 'story' },
+];
+
+const priorities = [
+    { label: 'Low', value: 'low' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'High', value: 'high' },
+    { label: 'Critical', value: 'critical' },
+];
+
+// Methods
+const validateForm = () => {
+    errors.title = '';
+
+    if (!formData.title.trim()) {
+        errors.title = 'Title is required';
+        return false;
+    }
+
+    return true;
+};
+
+const resetForm = () => {
+    formData.title = '';
+    formData.description = '';
+    formData.type = 'task';
+    formData.priority = 'medium';
+    formData.assigneeName = '';
+    formData.dueDate = null;
+    errors.title = '';
+};
+
+const handleClose = () => {
+    resetForm();
+    boardStore.closeModals();
+};
+
+const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    isSubmitting.value = true;
+
+    try {
+        const taskData = {
+            title: formData.title,
+            description: formData.description,
+            type: formData.type,
+            priority: formData.priority,
+            dueDate: formData.dueDate ? formData.dueDate.toISOString().split('T')[0] : null,
+        };
+
+        // Add assignee if provided
+        if (formData.assigneeName.trim()) {
+            taskData.assignee = {
+                name: formData.assigneeName,
+            };
+        }
+
+        await boardStore.createTask(route.params.id, props.statusId, taskData);
+
+        resetForm();
+        boardStore.closeModals();
+    } catch (error) {
+        console.error('Failed to create task:', error);
+    } finally {
+        isSubmitting.value = false;
+    }
+};
+
+watch(() => props.isOpen, (newVal) => {
+    if (!newVal) {
+        resetForm();
+    }
+});
+</script>
+
+<style scoped>
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid var(--surface-200);
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--surface-900);
+    margin: 0;
+}
+
+.close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--surface-500);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: var(--surface-100);
+    color: var(--surface-900);
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--surface-700);
+    margin-bottom: 8px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.error-message {
+    display: block;
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--surface-200);
+}
+
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-active .modal-container,
+.modal-leave-active .modal-container {
+    transition: transform 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-from .modal-container {
+    transform: scale(0.95) translateY(-20px);
+}
+
+.modal-leave-to .modal-container {
+    transform: scale(0.95) translateY(20px);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
