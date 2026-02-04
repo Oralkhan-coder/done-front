@@ -26,5 +26,27 @@ export const useAuthStore = defineStore('auth', () => {
         return navigateTo('/login');
     };
 
-    return { credentials, accessToken, isAuthenticated, login, logout };
+    const register = async (registrationData) => {
+        try {
+            const response = await $fetch('http://localhost:3000/signup', {
+                method: 'POST',
+                body: {
+                    email: registrationData.email,
+                    password: registrationData.password,
+                    fullName: registrationData.fullName,
+                },
+            });
+
+            if (response.status === 201 || response) {
+                return response;
+            }
+        } catch (error) {
+            if (error.response) {
+                throw new Error(error.response._data?.message || 'Registration failed');
+            }
+            throw new Error('Network error. Please try again.');
+        }
+    };
+
+    return { credentials, accessToken, isAuthenticated, login, logout, register };
 });

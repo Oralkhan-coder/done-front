@@ -79,7 +79,7 @@
 
                 <p class="text-center text-sm text-slate-600">
                     Don't have an account?
-                    <a href="#" class="font-medium text-primary-600 hover:text-primary-500 hover:underline">Sign up for free</a>
+                    <NuxtLink to="/register" class="font-medium text-primary-600 hover:text-primary-500 hover:underline">Sign up for free</NuxtLink>
                 </p>
             </div>
         </div>
