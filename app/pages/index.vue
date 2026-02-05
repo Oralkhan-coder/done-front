@@ -1,6 +1,5 @@
 <template>
     <div class="space-y-8">
-        <!-- Welcome Section -->
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
@@ -10,8 +9,6 @@
                 <Button label="New Project" icon="carbon:add" size="small" class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" />
             </div>
         </div>
-
-        <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div class="z-10">
@@ -22,7 +19,6 @@
                     <Icon name="carbon:layers" size="24" />
                 </div>
             </div>
-
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div class="z-10">
                     <p class="text-slate-500 text-sm font-medium">In Progress</p>
@@ -32,7 +28,6 @@
                     <Icon name="carbon:time" size="24" />
                 </div>
             </div>
-
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div class="z-10">
                     <p class="text-slate-500 text-sm font-medium">Completed</p>
@@ -42,7 +37,6 @@
                     <Icon name="carbon:checkmark-filled" size="24" />
                 </div>
             </div>
-
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div class="z-10">
                     <p class="text-slate-500 text-sm font-medium">Team Members</p>
@@ -53,8 +47,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Recent Activity / Projects -->
         <div class="grid lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <div class="flex items-center justify-between mb-6">
@@ -77,7 +69,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h3 class="font-bold text-lg text-slate-800 mb-6">Quick Actions</h3>
                 <div class="space-y-3">
@@ -104,6 +95,5 @@
         </div>
     </div>
 </template>
-
 <script setup>
 </script>

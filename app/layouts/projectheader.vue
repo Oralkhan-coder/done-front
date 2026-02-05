@@ -1,9 +1,7 @@
 <template>
     <NuxtLayout name="default">
         <div class="space-y-0">
-            <!-- Project Header -->
             <div class="bg-white border-b border-slate-200 -mx-6 md:-mx-8 px-6 md:px-8 pb-0">
-                <!-- Breadcrumb -->
                 <div class="pt-4 pb-3">
                     <nav class="flex items-center gap-2 text-sm">
                         <NuxtLink to="/projects"
@@ -15,8 +13,6 @@
                         <span class="text-slate-700 font-medium">{{ project.title || 'Loading...' }}</span>
                     </nav>
                 </div>
-
-                <!-- Project Info -->
                 <div class="flex items-center gap-4 pb-4">
                     <div
                         class="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
@@ -33,8 +29,6 @@
                         <p v-if="project.description" class="text-sm text-slate-500 mt-1">{{ project.description }}</p>
                     </div>
                 </div>
-
-                <!-- Tab Navigation -->
                 <nav class="flex items-center gap-1 -mb-px">
                     <NuxtLink v-for="tab in tabs" :key="tab.path" :to="tab.path" custom
                         v-slot="{ href, navigate, isActive }">
@@ -50,26 +44,17 @@
                     </NuxtLink>
                 </nav>
             </div>
-
-            <!-- Page Content -->
             <div class="pt-6">
                 <slot />
             </div>
         </div>
     </NuxtLayout>
 </template>
-
 <script setup>
 const route = useRoute();
 const projectStore = useProjectStore();
-
-// Reactive project data
 const project = computed(() => projectStore.project);
-
-// Fetch project data
 await projectStore.getProject(route);
-
-// Tab configuration
 const tabs = computed(() => [
     {
         name: 'Backlog',
@@ -81,26 +66,12 @@ const tabs = computed(() => [
         path: `/projects/${route.params.id}/boards`,
         icon: 'carbon:grid'
     },
-    // Future tabs - uncomment when ready
-    // { 
-    //     name: 'Timeline', 
-    //     path: `/projects/${route.params.id}/timeline`,
-    //     icon: 'carbon:calendar'
-    // },
-    // { 
-    //     name: 'Reports', 
-    //     path: `/projects/${route.params.id}/reports`,
-    //     icon: 'carbon:chart-line'
-    // },
 ]);
 </script>
-
 <style scoped>
-/* Smooth tab transitions */
 nav a {
     position: relative;
 }
-
 nav a::after {
     content: '';
     position: absolute;
@@ -112,7 +83,6 @@ nav a::after {
     transform: scaleX(0);
     transition: transform 0.2s ease;
 }
-
 nav a:hover::after {
     transform: scaleX(1);
 }

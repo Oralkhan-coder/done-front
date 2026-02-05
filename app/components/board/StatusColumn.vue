@@ -9,7 +9,6 @@
                 <Icon name="carbon:add" size="16" />
             </button>
         </div>
-
         <div class="tasks-container" :class="{ 'drag-over': isDragOver }" @dragover.prevent="handleDragOver"
             @dragleave="handleDragLeave" @drop="handleDrop">
             <TransitionGroup name="task-list" tag="div">
@@ -17,7 +16,6 @@
                     :status-id="column.statusId"
                     @click="handleTaskClick(task)" />
             </TransitionGroup>
-
             <div v-if="!column.tasks || column.tasks.length === 0" class="empty-state">
                 <Icon name="carbon:document-blank" size="32" class="empty-icon" />
                 <p class="empty-text">No tasks</p>
@@ -29,7 +27,6 @@
         </div>
     </div>
 </template>
-
 <script setup>
 const props = defineProps({
     column: {
@@ -37,55 +34,41 @@ const props = defineProps({
         required: true,
     },
 });
-
 const emit = defineEmits(['add-task', 'task-click', 'task-drop']);
-
 const boardStore = useBoardStore();
 const route = useRoute();
 const isDragOver = ref(false);
-
-// Computed
 const taskCount = computed(() => {
     return props.column.tasks?.length || 0;
 });
-
-// Handlers
 const handleAddTask = () => {
     boardStore.openCreateModal(props.column.statusId);
 };
-
 const handleTaskClick = (task) => {
     boardStore.openDetailModal(task);
 };
-
 const handleDragOver = (event) => {
     event.preventDefault();
     isDragOver.value = true;
 };
-
 const handleDragLeave = () => {
     isDragOver.value = false;
 };
-
 const handleDrop = async (event) => {
     event.preventDefault();
     isDragOver.value = false;
-
     const taskId = parseInt(event.dataTransfer.getData('taskId'));
     const fromStatusId = parseInt(event.dataTransfer.getData('statusId'));
     const toStatusId = props.column.statusId;
-
     if (taskId && fromStatusId && toStatusId && fromStatusId !== toStatusId) {
         try {
             await boardStore.moveTask(route.params.id, taskId, fromStatusId, toStatusId);
         } catch (error) {
             console.error('Failed to move task:', error);
-            // Optionally show error notification
         }
     }
 };
 </script>
-
 <style scoped>
 .status-column {
     display: flex;
@@ -97,8 +80,6 @@ const handleDrop = async (event) => {
     height: fit-content;
     max-height: calc(100vh - 280px);
 }
-
-/* Column Header */
 .column-header {
     display: flex;
     align-items: center;
@@ -111,13 +92,11 @@ const handleDrop = async (event) => {
     top: 0;
     z-index: 10;
 }
-
 .column-title-section {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
 .column-title {
     font-size: 14px;
     font-weight: 700;
@@ -126,7 +105,6 @@ const handleDrop = async (event) => {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .task-count {
     display: inline-flex;
     align-items: center;
@@ -140,7 +118,6 @@ const handleDrop = async (event) => {
     font-size: 11px;
     font-weight: 600;
 }
-
 .add-task-btn {
     display: flex;
     align-items: center;
@@ -154,13 +131,10 @@ const handleDrop = async (event) => {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .add-task-btn:hover {
     background: var(--primary-50);
     color: var(--primary-600);
 }
-
-/* Tasks Container */
 .tasks-container {
     flex: 1;
     padding: 12px;
@@ -169,14 +143,11 @@ const handleDrop = async (event) => {
     min-height: 200px;
     transition: background-color 0.2s ease;
 }
-
 .tasks-container.drag-over {
     background: var(--primary-50);
     border: 2px dashed var(--primary-400);
     border-radius: 8px;
 }
-
-/* Empty State */
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -185,18 +156,15 @@ const handleDrop = async (event) => {
     padding: 32px 16px;
     text-align: center;
 }
-
 .empty-icon {
     color: var(--surface-300);
     margin-bottom: 12px;
 }
-
 .empty-text {
     font-size: 13px;
     color: var(--surface-500);
     margin: 0 0 16px 0;
 }
-
 .empty-add-btn {
     display: flex;
     align-items: center;
@@ -211,48 +179,37 @@ const handleDrop = async (event) => {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .empty-add-btn:hover {
     background: var(--primary-50);
     border-color: var(--primary-400);
     color: var(--primary-700);
 }
-
-/* Task List Transitions */
 .task-list-move,
 .task-list-enter-active,
 .task-list-leave-active {
     transition: all 0.3s ease;
 }
-
 .task-list-enter-from {
     opacity: 0;
     transform: translateY(-10px);
 }
-
 .task-list-leave-to {
     opacity: 0;
     transform: translateX(20px);
 }
-
 .task-list-leave-active {
     position: absolute;
 }
-
-/* Scrollbar */
 .tasks-container::-webkit-scrollbar {
     width: 6px;
 }
-
 .tasks-container::-webkit-scrollbar-track {
     background: transparent;
 }
-
 .tasks-container::-webkit-scrollbar-thumb {
     background: var(--surface-300);
     border-radius: 3px;
 }
-
 .tasks-container::-webkit-scrollbar-thumb:hover {
     background: var(--surface-400);
 }

@@ -3,7 +3,6 @@
         <Transition name="modal">
             <div v-if="isOpen && task" class="modal-overlay" @click.self="handleClose">
                 <div class="modal-container detail-modal">
-                    <!-- Header -->
                     <div class="modal-header">
                         <div class="header-left">
                             <Icon :name="getTaskTypeIcon(task.type)" :class="['type-icon', `type-${task.type}`]"
@@ -19,10 +18,7 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Body -->
                     <div class="modal-body">
-                        <!-- Title -->
                         <div class="section">
                             <input v-if="isEditing" v-model="editData.title" class="title-input"
                                 placeholder="Task title" />
@@ -30,8 +26,6 @@
                                 {{ task.title }}
                             </h2>
                         </div>
-
-                        <!-- Description -->
                         <div class="section">
                             <label class="section-label">Description</label>
                             <Textarea v-if="isEditing" v-model="editData.description" rows="6" class="w-full"
@@ -43,10 +37,7 @@
                                 Click to add a description...
                             </p>
                         </div>
-
-                        <!-- Details Grid -->
                         <div class="details-grid">
-                            <!-- Type -->
                             <div class="detail-item">
                                 <label class="detail-label">Type</label>
                                 <Select v-if="isEditing" v-model="editData.type" :options="taskTypes"
@@ -57,8 +48,6 @@
                                     <span>{{ getTaskTypeLabel(task.type) }}</span>
                                 </div>
                             </div>
-
-                            <!-- Priority -->
                             <div class="detail-item">
                                 <label class="detail-label">Priority</label>
                                 <Select v-if="isEditing" v-model="editData.priority" :options="priorities"
@@ -67,8 +56,6 @@
                                     {{ getPriorityLabel(task.priority) }}
                                 </span>
                             </div>
-
-                            <!-- Assignee -->
                             <div class="detail-item">
                                 <label class="detail-label">Assignee</label>
                                 <InputText v-if="isEditing" v-model="editData.assigneeName" placeholder="Assignee name"
@@ -83,8 +70,6 @@
                                     <span>{{ task.assignee?.name || 'Unassigned' }}</span>
                                 </div>
                             </div>
-
-                            <!-- Due Date -->
                             <div class="detail-item">
                                 <label class="detail-label">Due Date</label>
                                 <Calendar v-if="isEditing" v-model="editData.dueDate" dateFormat="yy-mm-dd"
@@ -95,8 +80,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Metadata -->
                         <div class="metadata">
                             <div class="metadata-item">
                                 <Icon name="carbon:time" size="14" />
@@ -108,8 +91,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Footer Actions -->
                     <div v-if="isEditing" class="modal-footer">
                         <Button label="Cancel" severity="secondary" outlined @click="cancelEdit" />
                         <Button label="Save Changes" icon="carbon:save" :loading="isSaving" @click="handleSave"
@@ -120,7 +101,6 @@
         </Transition>
     </Teleport>
 </template>
-
 <script setup>
 const props = defineProps({
     isOpen: {
@@ -132,12 +112,9 @@ const props = defineProps({
         default: null,
     },
 });
-
 const emit = defineEmits(['close', 'update', 'delete']);
-
 const route = useRoute();
 const boardStore = useBoardStore();
-
 const isEditing = ref(false);
 const isSaving = ref(false);
 const editData = reactive({
@@ -148,23 +125,18 @@ const editData = reactive({
     assigneeName: '',
     dueDate: null,
 });
-
-// Options
 const taskTypes = [
     { label: 'Task', value: 'task' },
     { label: 'Bug', value: 'bug' },
     { label: 'Feature', value: 'feature' },
     { label: 'Story', value: 'story' },
 ];
-
 const priorities = [
     { label: 'Low', value: 'low' },
     { label: 'Medium', value: 'medium' },
     { label: 'High', value: 'high' },
     { label: 'Critical', value: 'critical' },
 ];
-
-// Utility functions
 const getTaskTypeIcon = (type) => {
     const icons = {
         bug: 'carbon:debug',
@@ -174,7 +146,6 @@ const getTaskTypeIcon = (type) => {
     };
     return icons[type] || icons.task;
 };
-
 const getTaskTypeLabel = (type) => {
     const labels = {
         bug: 'Bug',
@@ -184,7 +155,6 @@ const getTaskTypeLabel = (type) => {
     };
     return labels[type] || labels.task;
 };
-
 const getPriorityLabel = (priority) => {
     const labels = {
         low: 'Low',
@@ -194,7 +164,6 @@ const getPriorityLabel = (priority) => {
     };
     return labels[priority] || labels.medium;
 };
-
 const getInitials = (name) => {
     if (!name) return '?';
     return name
@@ -204,7 +173,6 @@ const getInitials = (name) => {
         .toUpperCase()
         .slice(0, 2);
 };
-
 const formatDate = (date) => {
     if (!date) return '';
     return new Date(date).toLocaleDateString('en-US', {
@@ -213,27 +181,22 @@ const formatDate = (date) => {
         day: 'numeric'
     });
 };
-
 const formatRelativeTime = (date) => {
     if (!date) return '';
     const now = new Date();
     const past = new Date(date);
     const diffMs = now - past;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
     if (diffDays === 0) return 'today';
     if (diffDays === 1) return 'yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return formatDate(date);
 };
-
 const isOverdue = (date) => {
     if (!date) return false;
     return new Date(date) < new Date();
 };
-
-// Methods
 const loadEditData = () => {
     if (props.task) {
         editData.title = props.task.title || '';
@@ -244,20 +207,16 @@ const loadEditData = () => {
         editData.dueDate = props.task.dueDate ? new Date(props.task.dueDate) : null;
     }
 };
-
 const cancelEdit = () => {
     isEditing.value = false;
     loadEditData();
 };
-
 const handleClose = () => {
     isEditing.value = false;
     boardStore.closeModals();
 };
-
 const handleSave = async () => {
     isSaving.value = true;
-
     try {
         const updates = {
             title: editData.title,
@@ -266,13 +225,11 @@ const handleSave = async () => {
             priority: editData.priority,
             dueDate: editData.dueDate ? editData.dueDate.toISOString().split('T')[0] : null,
         };
-
         if (editData.assigneeName.trim()) {
             updates.assignee = {
                 name: editData.assigneeName,
             };
         }
-
         await boardStore.updateTask(route.params.id, props.task.id, updates);
         isEditing.value = false;
     } catch (error) {
@@ -281,7 +238,6 @@ const handleSave = async () => {
         isSaving.value = false;
     }
 };
-
 const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this task?')) {
         try {
@@ -292,26 +248,21 @@ const handleDelete = async () => {
         }
     }
 };
-
-// Watch for task changes
 watch(() => props.task, (newTask) => {
     if (newTask) {
         loadEditData();
     }
 }, { immediate: true });
-
 watch(() => props.isOpen, (newVal) => {
     if (!newVal) {
         isEditing.value = false;
     }
 });
 </script>
-
 <style scoped>
 .detail-modal {
     max-width: 800px;
 }
-
 .modal-header {
     display: flex;
     align-items: center;
@@ -319,46 +270,37 @@ watch(() => props.isOpen, (newVal) => {
     padding: 20px 24px;
     border-bottom: 1px solid var(--surface-200);
 }
-
 .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
 .type-icon {
     flex-shrink: 0;
 }
-
 .type-icon.type-bug {
     color: #ef4444;
 }
-
 .type-icon.type-feature {
     color: #8b5cf6;
 }
-
 .type-icon.type-story {
     color: #06b6d4;
 }
-
 .type-icon.type-task {
     color: #64748b;
 }
-
 .task-code {
     font-size: 14px;
     font-weight: 600;
     color: var(--surface-500);
     font-family: 'Courier New', monospace;
 }
-
 .header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
 .action-btn {
     display: flex;
     align-items: center;
@@ -371,20 +313,16 @@ watch(() => props.isOpen, (newVal) => {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .delete-btn {
     color: var(--surface-500);
 }
-
 .delete-btn:hover {
     background: #fee2e2;
     color: #dc2626;
 }
-
 .section {
     margin-bottom: 24px;
 }
-
 .section-label {
     display: block;
     font-size: 12px;
@@ -394,7 +332,6 @@ watch(() => props.isOpen, (newVal) => {
     letter-spacing: 0.5px;
     margin-bottom: 8px;
 }
-
 .title-input {
     width: 100%;
     font-size: 24px;
@@ -405,7 +342,6 @@ watch(() => props.isOpen, (newVal) => {
     padding: 12px;
     outline: none;
 }
-
 .task-title {
     font-size: 24px;
     font-weight: 700;
@@ -416,11 +352,9 @@ watch(() => props.isOpen, (newVal) => {
     border-radius: 8px;
     transition: background 0.2s ease;
 }
-
 .task-title:hover {
     background: var(--surface-50);
 }
-
 .description-text {
     color: var(--surface-700);
     line-height: 1.6;
@@ -430,11 +364,9 @@ watch(() => props.isOpen, (newVal) => {
     cursor: text;
     transition: background 0.2s ease;
 }
-
 .description-text:hover {
     background: var(--surface-50);
 }
-
 .empty-description {
     color: var(--surface-400);
     font-style: italic;
@@ -444,24 +376,20 @@ watch(() => props.isOpen, (newVal) => {
     cursor: text;
     transition: background 0.2s ease;
 }
-
 .empty-description:hover {
     background: var(--surface-50);
 }
-
 .details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-bottom: 24px;
 }
-
 .detail-item {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-
 .detail-label {
     font-size: 12px;
     font-weight: 700;
@@ -469,7 +397,6 @@ watch(() => props.isOpen, (newVal) => {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .detail-value {
     display: flex;
     align-items: center;
@@ -477,27 +404,21 @@ watch(() => props.isOpen, (newVal) => {
     color: var(--surface-700);
     font-weight: 500;
 }
-
 .type-icon-sm {
     flex-shrink: 0;
 }
-
 .type-icon-sm.type-bug {
     color: #ef4444;
 }
-
 .type-icon-sm.type-feature {
     color: #8b5cf6;
 }
-
 .type-icon-sm.type-story {
     color: #06b6d4;
 }
-
 .type-icon-sm.type-task {
     color: #64748b;
 }
-
 .priority-badge-lg {
     display: inline-block;
     font-size: 12px;
@@ -507,33 +428,27 @@ watch(() => props.isOpen, (newVal) => {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .priority-badge-lg.priority-low {
     background: #dcfce7;
     color: #166534;
 }
-
 .priority-badge-lg.priority-medium {
     background: #fef3c7;
     color: #92400e;
 }
-
 .priority-badge-lg.priority-high {
     background: #fee2e2;
     color: #991b1b;
 }
-
 .priority-badge-lg.priority-critical {
     background: #fecaca;
     color: #7f1d1d;
 }
-
 .assignee-display {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
 .assignee-avatar-lg {
     width: 32px;
     height: 32px;
@@ -547,14 +462,12 @@ watch(() => props.isOpen, (newVal) => {
     font-weight: 600;
     flex-shrink: 0;
 }
-
 .assignee-avatar-lg img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
 }
-
 .due-date-display {
     display: flex;
     align-items: center;
@@ -562,11 +475,9 @@ watch(() => props.isOpen, (newVal) => {
     color: var(--surface-700);
     font-weight: 500;
 }
-
 .due-date-display.overdue {
     color: #dc2626;
 }
-
 .metadata {
     display: flex;
     flex-wrap: wrap;
@@ -574,7 +485,6 @@ watch(() => props.isOpen, (newVal) => {
     padding-top: 16px;
     border-top: 1px solid var(--surface-200);
 }
-
 .metadata-item {
     display: flex;
     align-items: center;
@@ -582,7 +492,6 @@ watch(() => props.isOpen, (newVal) => {
     font-size: 12px;
     color: var(--surface-500);
 }
-
 .modal-footer {
     display: flex;
     align-items: center;
@@ -592,7 +501,6 @@ watch(() => props.isOpen, (newVal) => {
     border-top: 1px solid var(--surface-200);
     background: var(--surface-50);
 }
-
 @media (max-width: 640px) {
     .details-grid {
         grid-template-columns: 1fr;
