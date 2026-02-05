@@ -10,7 +10,6 @@
                     class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" />
             </NuxtLink>
         </div>
-
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <DataTable :value="projectStore.projects" :pt="{
                 table: { class: 'w-full' },
@@ -33,7 +32,6 @@
                         </NuxtLink>
                     </template>
                 </Column>
-
                 <Column field="code" class="py-4 px-6 text-slate-600">
                     <template #header>
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</span>
@@ -45,7 +43,6 @@
                         </span>
                     </template>
                 </Column>
-
                 <Column field="createdAt" class="py-4 px-6 text-slate-600">
                     <template #header>
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</span>
@@ -54,7 +51,6 @@
                         <span class="text-sm">{{ formatTime(slotProps.data.createdAt) }}</span>
                     </template>
                 </Column>
-
                 <Column class="py-4 px-6 w-32">
                     <template #header>
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</span>
@@ -74,7 +70,6 @@
                         </div>
                     </template>
                 </Column>
-
                 <template #empty>
                     <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
@@ -90,7 +85,6 @@
                 </template>
             </DataTable>
         </div>
-
         <div v-if="isEditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
                 @click="isEditModalOpen = false">
@@ -103,15 +97,12 @@
                         <Icon name="carbon:close" size="24" />
                     </button>
                 </div>
-
                 <ProjectsUpdateModal :project="editedProject"
                     @updateproject="(p) => { projectStore.updateProject(p); isEditModalOpen = false; }" />
             </div>
         </div>
-
     </div>
 </template>
-
 <script setup>
 const isEditModalOpen = ref(false)
 const editedProject = reactive({
@@ -122,8 +113,6 @@ const editedProject = reactive({
 })
 const projectStore = useProjectStore();
 await projectStore.getProjects();
-
-
 const openEditModal = (project) => {
     isEditModalOpen.value = true
     Object.assign(editedProject, {

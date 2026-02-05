@@ -1,6 +1,5 @@
 export default defineNuxtPlugin(() => {
     const authStore = useAuthStore();
-
     const api = $fetch.create({
         baseURL: 'http://localhost:3000',
         onRequest({ options }) {
@@ -15,7 +14,6 @@ export default defineNuxtPlugin(() => {
             }
         },
     });
-
     return {
         provide: { api },
     };
