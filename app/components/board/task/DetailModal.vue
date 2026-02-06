@@ -5,8 +5,11 @@
                 <div class="modal-container detail-modal">
                     <div class="modal-header">
                         <div class="header-left">
-                            <Icon :name="getTaskTypeIcon(task.type)" :class="['type-icon', `type-${task.type}`]"
-                                size="24" />
+                            <Icon
+                                :name="getTaskTypeIcon(task.type)"
+                                :class="['type-icon', `type-${task.type}`]"
+                                size="24"
+                            />
                             <span class="task-code">{{ task.code || `#${task.id}` }}</span>
                         </div>
                         <div class="header-actions">
@@ -20,16 +23,25 @@
                     </div>
                     <div class="modal-body">
                         <div class="section">
-                            <input v-if="isEditing" v-model="editData.title" class="title-input"
-                                placeholder="Task title" />
+                            <input
+                                v-if="isEditing"
+                                v-model="editData.title"
+                                class="title-input"
+                                placeholder="Task title"
+                            />
                             <h2 v-else class="task-title" @click="isEditing = true">
                                 {{ task.title }}
                             </h2>
                         </div>
                         <div class="section">
                             <label class="section-label">Description</label>
-                            <Textarea v-if="isEditing" v-model="editData.description" rows="6" class="w-full"
-                                placeholder="Add a description..." />
+                            <Textarea
+                                v-if="isEditing"
+                                v-model="editData.description"
+                                rows="6"
+                                class="w-full"
+                                placeholder="Add a description..."
+                            />
                             <p v-else-if="task.description" class="description-text" @click="isEditing = true">
                                 {{ task.description }}
                             </p>
@@ -40,26 +52,45 @@
                         <div class="details-grid">
                             <div class="detail-item">
                                 <label class="detail-label">Type</label>
-                                <Select v-if="isEditing" v-model="editData.type" :options="taskTypes"
-                                    optionLabel="label" optionValue="value" class="w-full" />
+                                <Select
+                                    v-if="isEditing"
+                                    v-model="editData.type"
+                                    :options="taskTypes"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    class="w-full"
+                                />
                                 <div v-else class="detail-value">
-                                    <Icon :name="getTaskTypeIcon(task.type)"
-                                        :class="['type-icon-sm', `type-${task.type}`]" size="16" />
+                                    <Icon
+                                        :name="getTaskTypeIcon(task.type)"
+                                        :class="['type-icon-sm', `type-${task.type}`]"
+                                        size="16"
+                                    />
                                     <span>{{ getTaskTypeLabel(task.type) }}</span>
                                 </div>
                             </div>
                             <div class="detail-item">
                                 <label class="detail-label">Priority</label>
-                                <Select v-if="isEditing" v-model="editData.priority" :options="priorities"
-                                    optionLabel="label" optionValue="value" class="w-full" />
+                                <Select
+                                    v-if="isEditing"
+                                    v-model="editData.priority"
+                                    :options="priorities"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    class="w-full"
+                                />
                                 <span v-else :class="['priority-badge-lg', `priority-${task.priority}`]">
                                     {{ getPriorityLabel(task.priority) }}
                                 </span>
                             </div>
                             <div class="detail-item">
                                 <label class="detail-label">Assignee</label>
-                                <InputText v-if="isEditing" v-model="editData.assigneeName" placeholder="Assignee name"
-                                    class="w-full" />
+                                <InputText
+                                    v-if="isEditing"
+                                    v-model="editData.assigneeName"
+                                    placeholder="Assignee name"
+                                    class="w-full"
+                                />
                                 <div v-else class="assignee-display">
                                     <div class="assignee-avatar-lg">
                                         <span v-if="!task.assignee?.avatar">
@@ -72,9 +103,15 @@
                             </div>
                             <div class="detail-item">
                                 <label class="detail-label">Due Date</label>
-                                <Calendar v-if="isEditing" v-model="editData.dueDate" dateFormat="yy-mm-dd"
-                                    placeholder="Select date" class="w-full" showIcon />
-                                <div v-else :class="['due-date-display', { 'overdue': isOverdue(task.dueDate) }]">
+                                <Calendar
+                                    v-if="isEditing"
+                                    v-model="editData.dueDate"
+                                    dateFormat="yy-mm-dd"
+                                    placeholder="Select date"
+                                    class="w-full"
+                                    showIcon
+                                />
+                                <div v-else :class="['due-date-display', { overdue: isOverdue(task.dueDate) }]">
                                     <Icon name="carbon:calendar" size="16" />
                                     <span>{{ task.dueDate ? formatDate(task.dueDate) : 'No due date' }}</span>
                                 </div>
@@ -93,8 +130,13 @@
                     </div>
                     <div v-if="isEditing" class="modal-footer">
                         <Button label="Cancel" severity="secondary" outlined @click="cancelEdit" />
-                        <Button label="Save Changes" icon="carbon:save" :loading="isSaving" @click="handleSave"
-                            class="bg-indigo-600 border-indigo-600" />
+                        <Button
+                            label="Save Changes"
+                            icon="carbon:save"
+                            :loading="isSaving"
+                            @click="handleSave"
+                            class="bg-indigo-600 border-indigo-600"
+                        />
                     </div>
                 </div>
             </div>
@@ -168,7 +210,7 @@ const getInitials = (name) => {
     if (!name) return '?';
     return name
         .split(' ')
-        .map(n => n[0])
+        .map((n) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
@@ -178,7 +220,7 @@ const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     });
 };
 const formatRelativeTime = (date) => {
@@ -248,16 +290,23 @@ const handleDelete = async () => {
         }
     }
 };
-watch(() => props.task, (newTask) => {
-    if (newTask) {
-        loadEditData();
-    }
-}, { immediate: true });
-watch(() => props.isOpen, (newVal) => {
-    if (!newVal) {
-        isEditing.value = false;
-    }
-});
+watch(
+    () => props.task,
+    (newTask) => {
+        if (newTask) {
+            loadEditData();
+        }
+    },
+    { immediate: true },
+);
+watch(
+    () => props.isOpen,
+    (newVal) => {
+        if (!newVal) {
+            isEditing.value = false;
+        }
+    },
+);
 </script>
 <style scoped>
 .detail-modal {

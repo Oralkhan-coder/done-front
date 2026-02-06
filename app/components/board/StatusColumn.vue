@@ -9,12 +9,31 @@
                 <Icon name="carbon:add" size="16" />
             </button>
         </div>
-        <div class="tasks-container" :class="{ 'drag-over': isDragOver }" @dragover.prevent="handleDragOver"
-            @dragleave="handleDragLeave" @drop="handleDrop">
-            <TransitionGroup name="task-list" tag="div">
-                <BoardTaskCard v-for="task in column.tasks" :key="task.id" :task="task"
+        <div
+            class="tasks-container"
+            :class="{ 'drag-over': isDragOver }"
+            @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop"
+        >
+            <!-- Inline Create Card -->
+            <Transition name="create-card">
+                <BoardTaskCreateCard
+                    v-if="showInlineCreate"
                     :status-id="column.statusId"
-                    @click="handleTaskClick(task)" />
+                    @submit="handleTaskCreated"
+                    @cancel="handleCancelCreate"
+                />
+            </Transition>
+
+            <TransitionGroup name="task-list" tag="div">
+                <BoardTaskCard
+                    v-for="task in column.tasks"
+                    :key="task.id"
+                    :task="task"
+                    :status-id="column.statusId"
+                    @click="handleTaskClick(task)"
+                />
             </TransitionGroup>
             <div v-if="!column.tasks || column.tasks.length === 0" class="empty-state">
                 <Icon name="carbon:document-blank" size="32" class="empty-icon" />
@@ -38,14 +57,38 @@ const emit = defineEmits(['add-task', 'task-click', 'task-drop']);
 const boardStore = useBoardStore();
 const route = useRoute();
 const isDragOver = ref(false);
+const showInlineCreate = ref(false);
+
 const taskCount = computed(() => {
     return props.column.tasks?.length || 0;
 });
+
 const handleAddTask = () => {
-    boardStore.openCreateModal(props.column.statusId);
+    showInlineCreate.value = true;
 };
+
 const handleTaskClick = (task) => {
     boardStore.openDetailModal(task);
+};
+
+const handleTaskCreated = (newTask) => {
+    console.log('Received task from CreateCard:', newTask);
+
+    // Add the new task to the column
+    const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
+    if (column) {
+        if (!column.tasks) column.tasks = [];
+
+        // Use the full response from the API
+        column.tasks.unshift(newTask);
+
+        console.log('Task added to column:', newTask);
+    }
+    showInlineCreate.value = false;
+};
+
+const handleCancelCreate = () => {
+    showInlineCreate.value = false;
 };
 const handleDragOver = (event) => {
     event.preventDefault();
@@ -78,8 +121,8 @@ const handleDrop = async (event) => {
     min-width: 300px;
     max-width: 300px;
     height: fit-content;
-    max-height: calc(100vh - 280px);
 }
+
 .column-header {
     display: flex;
     align-items: center;
@@ -92,11 +135,13 @@ const handleDrop = async (event) => {
     top: 0;
     z-index: 10;
 }
+
 .column-title-section {
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
 .column-title {
     font-size: 14px;
     font-weight: 700;
@@ -105,6 +150,7 @@ const handleDrop = async (event) => {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
 .task-count {
     display: inline-flex;
     align-items: center;
@@ -118,6 +164,7 @@ const handleDrop = async (event) => {
     font-size: 11px;
     font-weight: 600;
 }
+
 .add-task-btn {
     display: flex;
     align-items: center;
@@ -131,23 +178,26 @@ const handleDrop = async (event) => {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .add-task-btn:hover {
     background: var(--primary-50);
     color: var(--primary-600);
 }
+
 .tasks-container {
     flex: 1;
     padding: 12px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     min-height: 200px;
     transition: background-color 0.2s ease;
 }
+
 .tasks-container.drag-over {
     background: var(--primary-50);
     border: 2px dashed var(--primary-400);
     border-radius: 8px;
 }
+
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -156,15 +206,18 @@ const handleDrop = async (event) => {
     padding: 32px 16px;
     text-align: center;
 }
+
 .empty-icon {
     color: var(--surface-300);
     margin-bottom: 12px;
 }
+
 .empty-text {
     font-size: 13px;
     color: var(--surface-500);
     margin: 0 0 16px 0;
 }
+
 .empty-add-btn {
     display: flex;
     align-items: center;
@@ -179,38 +232,45 @@ const handleDrop = async (event) => {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .empty-add-btn:hover {
     background: var(--primary-50);
     border-color: var(--primary-400);
     color: var(--primary-700);
 }
+
 .task-list-move,
 .task-list-enter-active,
 .task-list-leave-active {
     transition: all 0.3s ease;
 }
+
 .task-list-enter-from {
     opacity: 0;
     transform: translateY(-10px);
 }
+
 .task-list-leave-to {
     opacity: 0;
     transform: translateX(20px);
 }
+
 .task-list-leave-active {
     position: absolute;
 }
-.tasks-container::-webkit-scrollbar {
-    width: 6px;
+
+.create-card-enter-active,
+.create-card-leave-active {
+    transition: all 0.3s ease;
 }
-.tasks-container::-webkit-scrollbar-track {
-    background: transparent;
+
+.create-card-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
 }
-.tasks-container::-webkit-scrollbar-thumb {
-    background: var(--surface-300);
-    border-radius: 3px;
-}
-.tasks-container::-webkit-scrollbar-thumb:hover {
-    background: var(--surface-400);
+
+.create-card-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
 }
 </style>

@@ -22,9 +22,6 @@
                 </div>
             </div>
             <h4 class="task-title">{{ task.title }}</h4>
-            <p v-if="task.description" class="task-description">
-                {{ truncateText(task.description, 80) }}
-            </p>
             <div class="task-footer">
                 <div class="flex items-center gap-2">
                     <div v-if="task.assignee" class="assignee-avatar" :title="task.assignee.name">
@@ -134,15 +131,18 @@ const isOverdue = (date) => {
     transition: all 0.2s ease;
     overflow: hidden;
 }
+
 .task-card:hover {
     border-color: var(--primary-300);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
     transform: translateY(-1px);
 }
+
 .task-card.dragging {
     opacity: 0.5;
     cursor: grabbing;
 }
+
 .priority-indicator {
     position: absolute;
     left: 0;
@@ -150,49 +150,62 @@ const isOverdue = (date) => {
     bottom: 0;
     width: 3px;
 }
+
 .priority-indicator.priority-low {
     background: #22c55e;
 }
+
 .priority-indicator.priority-medium {
     background: #f59e0b;
 }
+
 .priority-indicator.priority-high {
     background: #ef4444;
 }
+
 .priority-indicator.priority-critical {
     background: #dc2626;
 }
+
 .task-card-content {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
 .task-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
+
 .task-id {
     font-size: 11px;
     font-weight: 600;
     color: var(--surface-500);
     font-family: 'Courier New', monospace;
 }
+
 .task-type-icon {
     flex-shrink: 0;
 }
+
 .task-type-icon.type-bug {
     color: #ef4444;
 }
+
 .task-type-icon.type-feature {
     color: #8b5cf6;
 }
+
 .task-type-icon.type-story {
     color: #06b6d4;
 }
+
 .task-type-icon.type-task {
     color: #64748b;
 }
+
 .task-title {
     font-size: 14px;
     font-weight: 600;
@@ -201,18 +214,21 @@ const isOverdue = (date) => {
     margin: 0;
     word-wrap: break-word;
 }
+
 .task-description {
     font-size: 12px;
     color: var(--surface-600);
     line-height: 1.5;
     margin: 0;
 }
+
 .task-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: 4px;
 }
+
 .assignee-avatar {
     width: 24px;
     height: 24px;
@@ -227,16 +243,19 @@ const isOverdue = (date) => {
     flex-shrink: 0;
     border: 2px solid white;
 }
+
 .assignee-avatar.unassigned {
     background: var(--surface-100);
     color: var(--surface-400);
 }
+
 .assignee-avatar img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
 }
+
 .priority-badge {
     font-size: 10px;
     font-weight: 600;
@@ -245,22 +264,27 @@ const isOverdue = (date) => {
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+
 .priority-badge.priority-low {
     background: #dcfce7;
     color: #166534;
 }
+
 .priority-badge.priority-medium {
     background: #fef3c7;
     color: #92400e;
 }
+
 .priority-badge.priority-high {
     background: #fee2e2;
     color: #991b1b;
 }
+
 .priority-badge.priority-critical {
     background: #fecaca;
     color: #7f1d1d;
 }
+
 .due-date {
     display: flex;
     align-items: center;
@@ -269,9 +293,11 @@ const isOverdue = (date) => {
     color: var(--surface-500);
     font-weight: 500;
 }
+
 .due-date.overdue {
     color: #dc2626;
 }
+
 .due-date.overdue :deep(svg) {
     color: #dc2626;
 }

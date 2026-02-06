@@ -1,13 +1,7 @@
 <template>
-  <div>
-    Hello world!
-  </div>
+    <div>Hello world!</div>
 </template>
 
-<script setup>
+<script setup></script>
 
-</script>
-
-<style>
-
-</style>
+<style></style>

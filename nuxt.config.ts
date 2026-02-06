@@ -1,6 +1,5 @@
 import Aura from '@primeuix/themes/aura';
 
-
 export default defineNuxtConfig({
     css: ['~/assets/css/main.css'],
 

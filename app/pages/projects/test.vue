@@ -3,6 +3,5 @@ definePageMeta({
     layout: 'tabheader',
 });
 </script>
-<template>
-    </template>
+<template></template>
 <style scoped></style>

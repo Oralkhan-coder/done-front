@@ -6,11 +6,11 @@
                 <h2 class="text-xl font-bold text-slate-900">Backlog</h2>
                 <p class="text-sm text-slate-500 mt-1">Plan and prioritize your project tasks</p>
             </div>
-            <Button 
-                label="Create Issue" 
-                icon="carbon:add" 
+            <Button
+                label="Create Issue"
+                icon="carbon:add"
                 size="small"
-                class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" 
+                class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700"
             />
         </div>
 
@@ -25,11 +25,11 @@
                 <p class="text-slate-500 max-w-sm mt-2 mb-6">
                     Start adding issues to your backlog to plan and organize your project work.
                 </p>
-                <Button 
-                    label="Create your first issue" 
-                    icon="carbon:add" 
-                    size="small" 
-                    outlined 
+                <Button
+                    label="Create your first issue"
+                    icon="carbon:add"
+                    size="small"
+                    outlined
                     class="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                 />
             </div>
@@ -42,8 +42,8 @@
                 <div>
                     <h4 class="text-sm font-semibold text-blue-900">About Backlog</h4>
                     <p class="text-sm text-blue-700 mt-1">
-                        The backlog is where you manage all your project's work items. 
-                        Create, prioritize, and organize issues before moving them to your board.
+                        The backlog is where you manage all your project's work items. Create, prioritize, and organize
+                        issues before moving them to your board.
                     </p>
                 </div>
             </div>
