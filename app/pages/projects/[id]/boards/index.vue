@@ -1,24 +1,14 @@
 <template>
     <div class="board-page">
-        <!-- Board Toolbar -->
         <div class="board-toolbar">
             <div class="toolbar-left">
-                <h2 class="board-title">Board</h2>
-                <div class="board-stats">
-                    <span class="stat-item">
-                        <Icon name="carbon:checkbox" size="16" />
-                        {{ totalTasks }} tasks
-                    </span>
-                </div>
-            </div>
-            <div class="toolbar-right">
                 <div class="search-box">
                     <Icon name="carbon:search" size="16" class="search-icon" />
                     <input v-model="searchQuery" type="text" placeholder="Search tasks..." class="search-input" />
                 </div>
-                <button class="refresh-btn" @click="handleRefresh" :disabled="boardStore.isLoading">
-                    <Icon name="carbon:renew" size="18" :class="{ spinning: boardStore.isLoading }" />
-                </button>
+            </div>
+            <div class="toolbar-right">
+
             </div>
         </div>
 
@@ -105,8 +95,7 @@ const handleRefresh = async () => {
 .board-page {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 240px);
-    min-height: 600px;
+    height: 100%;
 }
 
 /* Toolbar */
@@ -114,38 +103,19 @@ const handleRefresh = async () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 0;
-    margin-bottom: 20px;
+    padding: 16px;
+    /* Added horizontal padding */
+    margin-bottom: 0;
+    /* Reduced margin since we have padding */
     gap: 16px;
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .toolbar-left {
     display: flex;
     align-items: center;
     gap: 16px;
-}
-
-.board-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--surface-900);
-    margin: 0;
-}
-
-.board-stats {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--surface-600);
-    font-weight: 500;
 }
 
 .toolbar-right {
@@ -188,43 +158,21 @@ const handleRefresh = async () => {
     color: var(--surface-400);
 }
 
-.refresh-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--surface-300);
-    background: white;
-    border-radius: 8px;
-    color: var(--surface-600);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.refresh-btn:hover:not(:disabled) {
-    background: var(--surface-50);
-    border-color: var(--primary-400);
-    color: var(--primary-600);
-}
-
-.refresh-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
 /* Board Container */
 .board-container {
     flex: 1;
     overflow: auto;
-    padding-bottom: 16px;
+    /* Enable both X and Y scrolling */
+    padding: 0 16px 16px 16px;
+    /* Added horizontal padding */
 }
 
 .board-columns {
     display: flex;
     gap: 16px;
-    min-height: 100%;
-    padding: 4px;
+    height: 100%;
+    /* Force full height */
+    padding: 4px 0;
     align-items: flex-start;
 }
 
