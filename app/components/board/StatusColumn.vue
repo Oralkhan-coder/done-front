@@ -9,31 +9,17 @@
                 <Icon name="carbon:add" size="16" />
             </button>
         </div>
-        <div
-            class="tasks-container"
-            :class="{ 'drag-over': isDragOver }"
-            @dragover.prevent="handleDragOver"
-            @dragleave="handleDragLeave"
-            @drop="handleDrop"
-        >
+        <div class="tasks-container" :class="{ 'drag-over': isDragOver }" @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave" @drop="handleDrop">
             <!-- Inline Create Card -->
             <Transition name="create-card">
-                <BoardTaskCreateCard
-                    v-if="showInlineCreate"
-                    :status-id="column.statusId"
-                    @submit="handleTaskCreated"
-                    @cancel="handleCancelCreate"
-                />
+                <BoardTaskCreateCard v-if="showInlineCreate" :status-id="column.statusId" @submit="handleTaskCreated"
+                    @cancel="handleCancelCreate" />
             </Transition>
 
             <TransitionGroup name="task-list" tag="div">
-                <BoardTaskCard
-                    v-for="task in column.tasks"
-                    :key="task.id"
-                    :task="task"
-                    :status-id="column.statusId"
-                    @click="handleTaskClick(task)"
-                />
+                <BoardTaskCard v-for="task in column.tasks" :key="task.id" :task="task" :status-id="column.statusId"
+                    @click="handleTaskClick(task)" />
             </TransitionGroup>
             <div v-if="!column.tasks || column.tasks.length === 0" class="empty-state">
                 <Icon name="carbon:document-blank" size="32" class="empty-icon" />
@@ -131,10 +117,12 @@ const handleDrop = async (event) => {
     border-bottom: 1px solid var(--surface-200);
     background: white;
     border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
     position: sticky;
     top: 0;
     z-index: 10;
 }
+
 
 .column-title-section {
     display: flex;
@@ -187,7 +175,6 @@ const handleDrop = async (event) => {
 .tasks-container {
     flex: 1;
     padding: 12px;
-    overflow: visible;
     min-height: 200px;
     transition: background-color 0.2s ease;
 }
