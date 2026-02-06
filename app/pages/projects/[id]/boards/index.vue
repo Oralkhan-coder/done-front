@@ -17,7 +17,7 @@
                     <input v-model="searchQuery" type="text" placeholder="Search tasks..." class="search-input" />
                 </div>
                 <button class="refresh-btn" @click="handleRefresh" :disabled="boardStore.isLoading">
-                    <Icon name="carbon:renew" size="18" :class="{ 'spinning': boardStore.isLoading }" />
+                    <Icon name="carbon:renew" size="18" :class="{ spinning: boardStore.isLoading }" />
                 </button>
             </div>
         </div>
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Create Task Modal -->
-        <BoardCreateTaskModal :is-open="boardStore.isCreateModalOpen" :status-id="boardStore.selectedStatusId || 0" />
+        <BoardTaskCreateModal :is-open="boardStore.isCreateModalOpen" :status-id="boardStore.selectedStatusId || 0" />
 
         <!-- Task Detail Modal -->
         <BoardTaskDetailModal :is-open="boardStore.isDetailModalOpen" :task="boardStore.selectedTask" />
@@ -82,20 +82,20 @@ const filteredBoard = computed(() => {
     }
 
     const query = searchQuery.value.toLowerCase();
-    return boardStore.board.map(column => ({
+    return boardStore.board.map((column) => ({
         ...column,
-        tasks: column.tasks?.filter(task => {
-            return (
-                task.title?.toLowerCase().includes(query) ||
-                task.description?.toLowerCase().includes(query) ||
-                task.assignee?.name?.toLowerCase().includes(query) ||
-                task.code?.toLowerCase().includes(query)
-            );
-        }) || [],
+        tasks:
+            column.tasks?.filter((task) => {
+                return (
+                    task.title?.toLowerCase().includes(query) ||
+                    task.description?.toLowerCase().includes(query) ||
+                    task.assignee?.name?.toLowerCase().includes(query) ||
+                    task.code?.toLowerCase().includes(query)
+                );
+            }) || [],
     }));
 });
 
-// Methods
 const handleRefresh = async () => {
     await boardStore.getBoard(route);
 };
@@ -216,8 +216,7 @@ const handleRefresh = async () => {
 /* Board Container */
 .board-container {
     flex: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: auto;
     padding-bottom: 16px;
 }
 
@@ -226,6 +225,7 @@ const handleRefresh = async () => {
     gap: 16px;
     min-height: 100%;
     padding: 4px;
+    align-items: flex-start;
 }
 
 /* Loading State */

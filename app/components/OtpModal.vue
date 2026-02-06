@@ -11,18 +11,31 @@
                             We've sent a verification code to your email address. Please enter the 6-digit code below.
                         </p>
                         <div class="otp-inputs">
-                            <input v-for="(digit, index) in otpDigits" :key="index"
-                                :ref="(el) => (inputRefs[index] = el)" v-model="otpDigits[index]" type="text"
-                                inputmode="numeric" maxlength="1" class="otp-input"
-                                :class="{ 'has-error': errorMessage }" @input="handleInput(index, $event)"
-                                @keydown="handleKeyDown(index, $event)" @paste="handlePaste" />
+                            <input
+                                v-for="(digit, index) in otpDigits"
+                                :key="index"
+                                :ref="(el) => (inputRefs[index] = el)"
+                                v-model="otpDigits[index]"
+                                type="text"
+                                inputmode="numeric"
+                                maxlength="1"
+                                class="otp-input"
+                                :class="{ 'has-error': errorMessage }"
+                                @input="handleInput(index, $event)"
+                                @keydown="handleKeyDown(index, $event)"
+                                @paste="handlePaste"
+                            />
                         </div>
                         <div v-if="errorMessage" class="error-message">
                             <Icon name="carbon:warning" size="16" />
                             <span>{{ errorMessage }}</span>
                         </div>
-                        <button type="button" :disabled="!isOtpComplete || isLoading" class="submit-btn"
-                            @click="handleSubmit">
+                        <button
+                            type="button"
+                            :disabled="!isOtpComplete || isLoading"
+                            class="submit-btn"
+                            @click="handleSubmit"
+                        >
                             <span v-if="!isLoading">Submit</span>
                             <span v-else class="loading-state">
                                 <Icon name="carbon:circle-dash" class="animate-spin" size="20" />
@@ -79,8 +92,7 @@ const handleKeyDown = (index, event) => {
         if (!otpDigits.value[index] && index > 0) {
             inputRefs.value[index - 1]?.focus();
         }
-    }
-    else if (event.key === 'ArrowLeft' && index > 0) {
+    } else if (event.key === 'ArrowLeft' && index > 0) {
         inputRefs.value[index - 1]?.focus();
     } else if (event.key === 'ArrowRight' && index < 5) {
         inputRefs.value[index + 1]?.focus();
@@ -141,7 +153,7 @@ watch(
                 inputRefs.value[0]?.focus();
             });
         }
-    }
+    },
 );
 defineExpose({
     setError,
@@ -162,7 +174,9 @@ defineExpose({
 .modal-container {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
     width: 100%;
     max-width: 480px;
     overflow: hidden;
