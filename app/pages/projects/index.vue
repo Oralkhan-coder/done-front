@@ -1,9 +1,9 @@
 <template>
-    <div class="h-full overflow-y-auto p-6 md:p-8">
+    <div class="h-full overflow-y-auto p-6 md:p-8 text-slate-900 dark:text-slate-100">
         <div class="space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Projects</h1>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Projects</h1>
                     <p class="text-slate-500 mt-1">Manage and track your ongoing projects.</p>
                 </div>
                 <NuxtLink :to="{ name: 'projects-create' }">
@@ -11,10 +11,10 @@
                         class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" />
                 </NuxtLink>
             </div>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <DataTable :value="projectStore.projects" :pt="{
                     table: { class: 'w-full' },
-                    thead: { class: 'bg-slate-50 border-b border-slate-200' },
+                    thead: { class: 'bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700' },
                     bodyRow: {
                         class: 'hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0',
                     },
@@ -80,7 +80,7 @@
                             <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                 <Icon name="carbon:search" size="32" class="text-slate-400" />
                             </div>
-                            <h3 class="text-lg font-semibold text-slate-900">No projects found</h3>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">No projects found</h3>
                             <p class="text-slate-500 max-w-sm mt-1 mb-6">
                                 Get started by creating your first project to organize your tasks.
                             </p>
@@ -96,9 +96,9 @@
                     @click="isEditModalOpen = false">
                 </div>
                 <div
-                    class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl transform transition-all p-6 space-y-4">
+                    class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-xl transform transition-all p-6 space-y-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-slate-900">Edit Project</h3>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Edit Project</h3>
                         <button @click="isEditModalOpen = false"
                             class="text-slate-400 hover:text-slate-600 transition-colors">
                             <Icon name="carbon:close" size="24" />
@@ -124,7 +124,23 @@ const editedProject = reactive({
     code: '',
 });
 const projectStore = useProjectStore();
-await projectStore.getProjects();
+try {
+    await projectStore.getProjects();
+} catch {
+    // prevent Nuxt error page when backend is temporarily unavailable
+}
+
+const formatTime = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    });
+};
+
 const openEditModal = (project) => {
     isEditModalOpen.value = true;
     Object.assign(editedProject, {

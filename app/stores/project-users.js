@@ -16,8 +16,6 @@ export const useProjectUsersStore = defineStore('project-users', () => {
             const { $api } = useNuxtApp();
             const response = await $api(`/projects/${projectId}/users`);
 
-            console.log('Fetched project users from API:', response);
-
             projectUsers.value = response.map((member) => {
                 const userId = member.user?.userId || member.userId || member.user?.id || member.id;
                 const userName = member.user?.name || member.name || `User ${userId}`;
@@ -84,7 +82,6 @@ export const useProjectUsersStore = defineStore('project-users', () => {
 
     const refreshUsers = async () => {
         if (!currentProjectId.value) {
-            console.warn('No project ID set, cannot refresh users');
             return;
         }
 

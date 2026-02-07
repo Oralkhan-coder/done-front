@@ -10,22 +10,43 @@ export const useAuthStore = defineStore('auth', () => {
         sameSite: 'lax',
     });
     const registrationEmail = ref('');
+    const isLoading = ref(false);
+    const error = ref(null);
     const isAuthenticated = computed(() => !!accessToken.value);
+
     const login = async (credentials) => {
-        const data = await $fetch('http://localhost:3000/login', {
-            method: 'POST',
-            body: credentials,
-        });
-        accessToken.value = data.accessToken;
-        return navigateTo('/');
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+            const { $api } = useNuxtApp();
+            const data = await $api('/login', {
+                method: 'POST',
+                body: credentials,
+            });
+
+            accessToken.value = data.accessToken;
+            return navigateTo('/');
+        } catch (err) {
+            error.value = err?.response?._data?.message || err?.message || 'Login failed';
+            throw err;
+        } finally {
+            isLoading.value = false;
+        }
     };
+
     const logout = () => {
         accessToken.value = null;
         return navigateTo('/login');
     };
+
     const register = async (registrationData) => {
+        isLoading.value = true;
+        error.value = null;
+
         try {
-            const response = await $fetch('http://localhost:3000/signup', {
+            const { $api } = useNuxtApp();
+            const response = await $api('/signup', {
                 method: 'POST',
                 body: {
                     email: registrationData.email,
@@ -37,16 +58,21 @@ export const useAuthStore = defineStore('auth', () => {
             if (response.status === 201 || response) {
                 return response;
             }
-        } catch (error) {
-            if (error.response) {
-                throw new Error(error.response._data?.message || 'Registration failed');
-            }
-            throw new Error('Network error. Please try again.');
+        } catch (err) {
+            error.value = err?.response?._data?.message || err?.message || 'Registration failed';
+            throw err;
+        } finally {
+            isLoading.value = false;
         }
     };
+
     const verifyOtp = async (code) => {
+        isLoading.value = true;
+        error.value = null;
+
         try {
-            const response = await $fetch('http://localhost:3000/otp/check', {
+            const { $api } = useNuxtApp();
+            const response = await $api('/otp/check', {
                 method: 'POST',
                 body: {
                     email: registrationEmail.value,
@@ -55,36 +81,45 @@ export const useAuthStore = defineStore('auth', () => {
             });
             registrationEmail.value = '';
             return response;
-        } catch (error) {
-            if (error.response) {
-                throw new Error(error.response._data?.message || 'Invalid verification code');
-            }
-            throw new Error('Network error. Please try again.');
+        } catch (err) {
+            error.value = err?.response?._data?.message || err?.message || 'Invalid verification code';
+            throw err;
+        } finally {
+            isLoading.value = false;
         }
     };
+
     const resendOtp = async () => {
+        isLoading.value = true;
+        error.value = null;
+
         try {
-            const response = await $fetch('http://localhost:3000/otp/generate', {
+            const { $api } = useNuxtApp();
+            const response = await $api('/otp/generate', {
                 method: 'POST',
                 body: {
                     email: registrationEmail.value,
                 },
             });
             return response;
-        } catch (error) {
-            if (error.response) {
-                throw new Error(error.response._data?.message || 'Failed to resend code');
-            }
-            throw new Error('Network error. Please try again.');
+        } catch (err) {
+            error.value = err?.response?._data?.message || err?.message || 'Failed to resend code';
+            throw err;
+        } finally {
+            isLoading.value = false;
         }
     };
+
     const clearRegistrationEmail = () => {
         registrationEmail.value = '';
     };
+
     return {
         credentials,
         accessToken,
         registrationEmail,
+        isLoading,
+        error,
         isAuthenticated,
         login,
         logout,

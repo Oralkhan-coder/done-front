@@ -62,7 +62,6 @@ const props = defineProps({
         required: true,
     },
 });
-const emit = defineEmits(['close', 'submit']);
 const route = useRoute();
 const boardStore = useBoardStore();
 const projectUsersStore = useProjectUsersStore();
@@ -142,31 +141,12 @@ const handleSubmit = async () => {
             requestBody.storyPoint = formData.storyPoint;
         }
 
-        const response = await $api(`/projects/${route.params.id}/tasks`, {
-            method: 'POST',
-            body: requestBody,
-        });
-
-        console.log('Task creation response:', response);
-
-        const column = boardStore.board.find((col) => col.statusId === props.statusId);
-        if (column && response) {
-            if (!column.tasks) column.tasks = [];
-            const newTask = {
-                ...response,
-                title: response.title || formData.title,
-                description: response.description || formData.description,
-                priority: response.priority || formData.priority,
-                statusId: response.statusId || props.statusId,
-            };
-            console.log('Adding task to board:', newTask);
-            column.tasks.push(newTask);
-        }
+        await boardStore.createTask(route.params.id, props.statusId, requestBody);
 
         resetForm();
         boardStore.closeModals();
-    } catch (error) {
-        console.error('Failed to create task:', error);
+    } catch {
+        // handled by centralized API notifications
     } finally {
         isSubmitting.value = false;
     }

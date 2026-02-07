@@ -77,7 +77,6 @@ const props = defineProps({
         default: null,
     },
 });
-const emit = defineEmits(['close', 'submit']);
 const route = useRoute();
 const boardStore = useBoardStore();
 const projectUsersStore = useProjectUsersStore();
@@ -146,8 +145,7 @@ const loadFormData = async () => {
             formData.priority = taskDetails.priority || 'medium';
             formData.assigneeId = taskDetails.assigneeId || null;
             formData.storyPoint = taskDetails.storyPoint || null;
-        } catch (error) {
-            console.error('Failed to load task details:', error);
+        } catch {
             formData.taskCode = props.task.code || '';
             formData.title = props.task.title || '';
             formData.description = props.task.description || '';
@@ -196,55 +194,15 @@ const handleSubmit = async () => {
             requestBody.storyPoint = formData.storyPoint;
         }
 
-        const response = await taskStore.updateTask(props.task.id, requestBody);
-
-        console.log('Task update response:', response);
-
-        const oldStatusId = props.task.statusId;
-        const newStatusId = formData.statusId;
-
-        // If status changed, move task between columns
-        if (oldStatusId !== newStatusId) {
-            const fromColumn = boardStore.board.find((col) => col.statusId === oldStatusId);
-            const toColumn = boardStore.board.find((col) => col.statusId === newStatusId);
-
-            if (fromColumn && toColumn) {
-                const taskIndex = fromColumn.tasks?.findIndex((t) => t.id === props.task.id);
-                if (taskIndex !== -1 && taskIndex !== undefined) {
-                    const task = fromColumn.tasks[taskIndex];
-                    fromColumn.tasks.splice(taskIndex, 1);
-
-                    if (!toColumn.tasks) toColumn.tasks = [];
-                    toColumn.tasks.push({
-                        ...task,
-                        ...requestBody,
-                        assignee: formData.assigneeId
-                            ? projectUsersStore.getUserById(formData.assigneeId)
-                            : null,
-                    });
-                }
-            }
-        } else {
-            boardStore.board.forEach((column) => {
-                if (column.tasks) {
-                    const taskIndex = column.tasks.findIndex((t) => t.id === props.task.id);
-                    if (taskIndex !== -1) {
-                        column.tasks[taskIndex] = {
-                            ...column.tasks[taskIndex],
-                            ...requestBody,
-                            assignee: formData.assigneeId
-                                ? projectUsersStore.getUserById(formData.assigneeId)
-                                : null,
-                        };
-                    }
-                }
-            });
-        }
+        await boardStore.updateTask(route.params.id, props.task.id, {
+            ...requestBody,
+            assignee: formData.assigneeId ? projectUsersStore.getUserById(formData.assigneeId) : null,
+        });
 
         resetForm();
         boardStore.closeModals();
-    } catch (error) {
-        console.error('Failed to update task:', error);
+    } catch {
+        // handled by centralized API notifications
     } finally {
         isSubmitting.value = false;
     }

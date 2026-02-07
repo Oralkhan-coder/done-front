@@ -1,16 +1,16 @@
 <template>
     <NuxtLayout name="default">
         <div class="flex flex-col h-full">
-            <div class="bg-white border-b border-slate-200 -mx-6 md:-mx-8 px-6 md:px-8 pb-0 flex-shrink-0">
+            <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 -mx-6 md:-mx-8 px-6 md:px-8 pb-0 flex-shrink-0">
                 <div class="pt-4 pb-3">
                     <nav class="flex items-center gap-2 text-sm">
                         <NuxtLink to="/projects"
-                            class="text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                            class="text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
                             <Icon name="carbon:layers" size="16" />
                             <span>Projects</span>
                         </NuxtLink>
                         <Icon name="carbon:chevron-right" size="16" class="text-slate-300" />
-                        <span class="text-slate-700 font-medium">{{ project.title || 'Loading...' }}</span>
+                        <span class="text-slate-700 dark:text-slate-100 font-medium">{{ project.title || 'Loading...' }}</span>
                     </nav>
                 </div>
 
@@ -20,8 +20,8 @@
                         <a :href="href" @click="navigate" :class="[
                             'flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 relative',
                             isActive
-                                ? 'text-indigo-700 border-indigo-600 bg-indigo-50/50'
-                                : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-50',
+                                ? 'text-indigo-700 dark:text-indigo-200 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/20'
+                                : 'text-slate-600 dark:text-slate-300 border-transparent hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800',
                         ]">
                             <Icon :name="tab.icon" size="18" />
                             <span>{{ tab.name }}</span>
@@ -39,7 +39,11 @@
 const route = useRoute();
 const projectStore = useProjectStore();
 const project = computed(() => projectStore.project);
-await projectStore.getProject(route);
+try {
+    await projectStore.getProject(route);
+} catch {
+    // keep layout renderable even if project request fails
+}
 const tabs = computed(() => [
     {
         name: 'Backlog',

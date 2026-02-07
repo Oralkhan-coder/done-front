@@ -39,7 +39,6 @@ const props = defineProps({
         required: true,
     },
 });
-const emit = defineEmits(['add-task', 'task-click', 'task-drop']);
 const boardStore = useBoardStore();
 const route = useRoute();
 const isDragOver = ref(false);
@@ -57,17 +56,7 @@ const handleTaskClick = (task) => {
     boardStore.openUpdateModal(task);
 };
 
-const handleTaskCreated = (newTask) => {
-    console.log('Received task from CreateCard:', newTask);
-
-    const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
-    if (column) {
-        if (!column.tasks) column.tasks = [];
-
-        column.tasks.unshift(newTask);
-
-        console.log('Task added to column:', newTask);
-    }
+const handleTaskCreated = () => {
     showInlineCreate.value = false;
 };
 
@@ -98,22 +87,46 @@ const handleTaskDelete = (deletedTask) => {
 const handleDragOver = (event) => {
     event.preventDefault();
     isDragOver.value = true;
+    event.dataTransfer.dropEffect = 'move';
 };
 const handleDragLeave = () => {
     isDragOver.value = false;
 };
+
+const resolveDropIndex = (event) => {
+    const taskCard = event.target.closest('.task-card');
+    if (!taskCard) {
+        return props.column.tasks?.length ?? 0;
+    }
+
+    const targetTaskId = Number(taskCard.dataset.taskId);
+    const targetIndex = props.column.tasks?.findIndex((task) => Number(task.id) === targetTaskId) ?? -1;
+    if (targetIndex === -1) {
+        return props.column.tasks?.length ?? 0;
+    }
+
+    const rect = taskCard.getBoundingClientRect();
+    const shouldInsertAfter = event.clientY > rect.top + rect.height / 2;
+    return shouldInsertAfter ? targetIndex + 1 : targetIndex;
+};
+
 const handleDrop = async (event) => {
     event.preventDefault();
     isDragOver.value = false;
-    const taskId = parseInt(event.dataTransfer.getData('taskId'));
-    const fromStatusId = parseInt(event.dataTransfer.getData('statusId'));
-    const toStatusId = props.column.statusId;
-    if (taskId && fromStatusId && toStatusId && fromStatusId !== toStatusId) {
-        try {
-            await boardStore.moveTask(route.params.id, taskId, fromStatusId, toStatusId);
-        } catch (error) {
-            console.error('Failed to move task:', error);
-        }
+
+    const taskId = Number(event.dataTransfer.getData('taskId'));
+    const fromStatusId = Number(event.dataTransfer.getData('statusId'));
+    const toStatusId = Number(props.column.statusId);
+
+    const hasValidIds = [taskId, fromStatusId, toStatusId].every((id) => Number.isFinite(id));
+    if (!hasValidIds) return;
+
+    const toIndex = resolveDropIndex(event);
+
+    try {
+        await boardStore.moveTask(route.params.id, taskId, fromStatusId, toStatusId, toIndex);
+    } catch {
+        // handled in centralized API layer + store rollback
     }
 };
 </script>
@@ -195,13 +208,15 @@ const handleDrop = async (event) => {
     flex: 1;
     padding: 12px;
     min-height: 200px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    border: 2px dashed transparent;
+    border-radius: 10px;
 }
 
 .tasks-container.drag-over {
-    background: var(--primary-50);
-    border: 2px dashed var(--primary-400);
-    border-radius: 8px;
+    background: color-mix(in srgb, var(--primary-100) 35%, transparent);
+    border-color: var(--primary-400);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-300) 50%, transparent);
 }
 
 .empty-state {

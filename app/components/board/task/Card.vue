@@ -1,15 +1,21 @@
 <template>
-    <div class="task-card group" draggable="true" @dragstart="handleDragStart" @dragend="handleDragEnd"
-        @click="handleClick">
+    <div class="task-card group" :data-task-id="task.id" :draggable="isDraggingEnabled" @dragstart="handleDragStart"
+        @dragend="handleDragEnd" @click="handleClick">
         <div :class="['priority-indicator', getPriorityClass(task.priority)]"></div>
         <div class="task-card-content">
             <div class="task-header">
                 <div class="flex items-center gap-2">
                     <span class="task-id">{{ task.code || `#${task.id}` }}</span>
                 </div>
-                <div ref="menuButton" class="drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
-                    @click.stop="toggleMenu">
-                    <Icon name="carbon:overflow-menu-horizontal" size="24" class="text-slate-400" />
+                <div class="task-header-actions">
+                    <button class="drag-trigger" :title="'Drag task'" @mousedown.stop="enableDrag"
+                        @mouseup.stop="disableDrag" @mouseleave="disableDrag">
+                        <Icon name="carbon:draggable" size="16" class="text-slate-400" />
+                    </button>
+                    <div ref="menuButton" class="drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
+                        @click.stop="toggleMenu">
+                        <Icon name="carbon:overflow-menu-horizontal" size="24" class="text-slate-400" />
+                    </div>
                 </div>
             </div>
             <h4 class="task-title">{{ task.title }}</h4>
@@ -90,7 +96,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['click', 'dragstart', 'dragend', 'update', 'delete']);
+const emit = defineEmits(['click', 'dragstart', 'dragend', 'update', 'delete', 'reorder']);
 
 const projectUsersStore = useProjectUsersStore();
 const taskStore = useTaskStore();
@@ -101,6 +107,7 @@ const menuPanel = ref(null);
 const assigneeButton = ref(null);
 const priorityButton = ref(null);
 const menuButton = ref(null);
+const isDraggingEnabled = ref(false);
 
 const priorities = [
     { label: 'Low', value: 'low' },
@@ -118,6 +125,11 @@ const loadingMembers = computed(() => {
 });
 
 const handleDragStart = (event) => {
+    if (!isDraggingEnabled.value) {
+        event.preventDefault();
+        return;
+    }
+
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('taskId', props.task.id.toString());
     event.dataTransfer.setData('statusId', props.statusId.toString());
@@ -127,7 +139,16 @@ const handleDragStart = (event) => {
 
 const handleDragEnd = (event) => {
     event.target.classList.remove('dragging');
+    disableDrag();
     emit('dragend', props.task);
+};
+
+const enableDrag = () => {
+    isDraggingEnabled.value = true;
+};
+
+const disableDrag = () => {
+    isDraggingEnabled.value = false;
 };
 
 const handleClick = () => {
@@ -172,8 +193,8 @@ const selectAssignee = async (member) => {
         });
 
         assigneePanel.value.hide();
-    } catch (error) {
-        console.error('Failed to update assignee:', error);
+    } catch {
+        // handled by centralized API notifications
     }
 };
 
@@ -202,8 +223,8 @@ const selectPriority = async (priority) => {
         });
 
         priorityPanel.value.hide();
-    } catch (error) {
-        console.error('Failed to update priority:', error);
+    } catch {
+        // handled by centralized API notifications
     }
 };
 
@@ -212,8 +233,8 @@ const handleDelete = async () => {
         await taskStore.deleteTask(props.task.id);
         emit('delete', props.task);
         menuPanel.value.hide();
-    } catch (error) {
-        console.error('Failed to delete task:', error);
+    } catch {
+        // handled by centralized API notifications
     }
 };
 
@@ -319,6 +340,32 @@ const isOverdue = (date) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.task-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.drag-trigger {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+}
+
+.drag-trigger:hover {
+    background: var(--surface-100);
+}
+
+.drag-trigger:active {
+    cursor: grabbing;
 }
 
 .task-id {
