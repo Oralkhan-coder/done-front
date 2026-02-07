@@ -146,11 +146,8 @@ const togglePriorityDropdown = (event) => {
 };
 
 const selectAssignee = (member) => {
-    console.log('Selected assignee:', member);
     selectedAssignee.value = member.value ? member : null;
     formData.assigneeId = member.value;
-    console.log('Updated formData.assigneeId:', formData.assigneeId);
-    console.log('Updated selectedAssignee:', selectedAssignee.value);
     assigneePanel.value.hide();
 };
 
@@ -190,8 +187,8 @@ const handleSubmit = async () => {
         }
 
         emit('submit', completeTask);
-    } catch (error) {
-        console.error('Failed to create task:', error);
+    } catch {
+        // handled by centralized API error notifications
     } finally {
         isSubmitting.value = false;
     }

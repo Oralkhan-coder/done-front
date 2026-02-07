@@ -8,117 +8,202 @@ export const useBoardStore = defineStore('board', () => {
     const isLoading = ref(false);
     const error = ref(null);
 
+    const findColumnByStatusId = (statusId) => {
+        return board.value.find((column) => Number(column.statusId) === Number(statusId));
+    };
+
+    const removeTaskFromColumn = (statusId, taskId) => {
+        const column = findColumnByStatusId(statusId);
+        if (!column?.tasks) return null;
+
+        const taskIndex = column.tasks.findIndex((task) => Number(task.id) === Number(taskId));
+        if (taskIndex === -1) return null;
+
+        const [task] = column.tasks.splice(taskIndex, 1);
+        return { task, taskIndex };
+    };
+
+    const insertTaskToColumn = (statusId, task, targetIndex = null) => {
+        const column = findColumnByStatusId(statusId);
+        if (!column) return;
+
+        if (!Array.isArray(column.tasks)) {
+            column.tasks = [];
+        }
+
+        const safeIndex =
+            Number.isFinite(Number(targetIndex)) && Number(targetIndex) >= 0
+                ? Math.min(Number(targetIndex), column.tasks.length)
+                : column.tasks.length;
+
+        column.tasks.splice(safeIndex, 0, task);
+    };
+
+    const syncStatusesFromBoard = () => {
+        const statusStore = useStatusStore();
+        statusStore.setFromBoard(board.value);
+    };
+
     const getBoard = async (route) => {
         isLoading.value = true;
         error.value = null;
+
         try {
-            const res = await useApi(`projects/${route.params.id}/board`);
-            board.value = res.data.value || [];
+            const { $api } = useNuxtApp();
+            const data = await $api(`/projects/${route.params.id}/board`);
+            board.value = data || [];
+            syncStatusesFromBoard();
         } catch (err) {
-            error.value = 'Failed to load board data';
-            console.error('Board fetch error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to load board data';
         } finally {
             isLoading.value = false;
         }
     };
 
     const createTask = async (projectId, statusId, taskData) => {
+        error.value = null;
+
         try {
-            const { $api } = useNuxtApp();
-            const res = await $api(`projects/${projectId}/tasks`, {
-                method: 'POST',
-                body: {
-                    ...taskData,
-                    statusId,
-                },
+            const taskStore = useTaskStore();
+            const createdTask = await taskStore.createTask(projectId, {
+                ...taskData,
+                statusId,
             });
-            const column = board.value.find((col) => col.statusId === statusId);
-            if (column && res) {
-                if (!column.tasks) column.tasks = [];
-                column.tasks.push(res);
+
+            insertTaskToColumn(statusId, {
+                ...createdTask,
+                statusId: Number(createdTask?.statusId ?? statusId),
+            }, 0);
+
+            return createdTask;
+        } catch (err) {
+            error.value = err?.response?._data?.message || err?.message || 'Failed to create task';
+            throw err;
+        }
+    };
+
+    const updateTask = async (_projectId, taskId, updates) => {
+        error.value = null;
+
+        try {
+            const taskStore = useTaskStore();
+            const updated = await taskStore.updateTask(taskId, updates);
+
+            const nextStatusId = Number(updates?.statusId ?? updated?.statusId);
+            let sourceStatusId = null;
+            let sourceTask = null;
+
+            for (const column of board.value) {
+                if (!Array.isArray(column.tasks)) continue;
+                const taskIndex = column.tasks.findIndex((task) => Number(task.id) === Number(taskId));
+                if (taskIndex === -1) continue;
+
+                sourceStatusId = Number(column.statusId);
+                sourceTask = column.tasks[taskIndex];
+
+                if (Number.isFinite(nextStatusId) && nextStatusId !== sourceStatusId) {
+                    column.tasks.splice(taskIndex, 1);
+                    insertTaskToColumn(nextStatusId, {
+                        ...sourceTask,
+                        ...updates,
+                        ...updated,
+                        statusId: nextStatusId,
+                    }, 0);
+                } else {
+                    column.tasks[taskIndex] = {
+                        ...sourceTask,
+                        ...updates,
+                        ...updated,
+                    };
+                }
+
+                break;
             }
-            return res;
+
+            return updated;
         } catch (err) {
-            error.value = 'Failed to create task';
-            console.error('Task creation error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to update task';
             throw err;
         }
     };
-    const updateTask = async (projectId, taskId, updates) => {
+
+    const deleteTask = async (_projectId, taskId) => {
+        error.value = null;
+
         try {
-            const { $api } = useNuxtApp();
-            const res = await $api(`projects/${projectId}/tasks/${taskId}`, {
-                method: 'PUT',
-                body: updates,
-            });
+            const taskStore = useTaskStore();
+            await taskStore.deleteTask(taskId);
+
             board.value.forEach((column) => {
-                if (column.tasks) {
-                    const taskIndex = column.tasks.findIndex((t) => t.id === taskId);
-                    if (taskIndex !== -1) {
-                        column.tasks[taskIndex] = { ...column.tasks[taskIndex], ...updates };
-                    }
-                }
+                if (!Array.isArray(column.tasks)) return;
+                column.tasks = column.tasks.filter((task) => Number(task.id) !== Number(taskId));
             });
-            return res;
         } catch (err) {
-            error.value = 'Failed to update task';
-            console.error('Task update error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to delete task';
             throw err;
         }
     };
-    const deleteTask = async (projectId, taskId) => {
+
+    const reorderTaskLocally = (statusId, taskId, toIndex = null) => {
+        const moved = removeTaskFromColumn(statusId, taskId);
+        if (!moved?.task) return;
+
+        let nextIndex = toIndex;
+        if (Number.isFinite(Number(toIndex)) && Number(toIndex) > moved.taskIndex) {
+            nextIndex = Number(toIndex) - 1;
+        }
+
+        insertTaskToColumn(statusId, moved.task, nextIndex);
+    };
+
+    const moveTask = async (_projectId, taskId, fromStatusId, toStatusId, toIndex = null) => {
+        error.value = null;
+
+        const fromColumn = findColumnByStatusId(fromStatusId);
+        const toColumn = findColumnByStatusId(toStatusId);
+
+        if (!fromColumn || !toColumn) return;
+
+        if (Number(fromStatusId) === Number(toStatusId)) {
+            reorderTaskLocally(fromStatusId, taskId, toIndex);
+            return;
+        }
+
+        const removed = removeTaskFromColumn(fromStatusId, taskId);
+        if (!removed?.task) return;
+
+        const optimisticTask = { ...removed.task, statusId: Number(toStatusId) };
+        insertTaskToColumn(toStatusId, optimisticTask, toIndex);
+
         try {
-            const { $api } = useNuxtApp();
-            await $api(`projects/${projectId}/tasks/${taskId}`, {
-                method: 'DELETE',
-            });
-            board.value.forEach((column) => {
-                if (column.tasks) {
-                    column.tasks = column.tasks.filter((t) => t.id !== taskId);
-                }
-            });
+            const taskStore = useTaskStore();
+            await taskStore.moveTask(taskId, Number(toStatusId));
         } catch (err) {
-            error.value = 'Failed to delete task';
-            console.error('Task deletion error:', err);
+            const rolledBack = removeTaskFromColumn(toStatusId, taskId);
+            if (rolledBack?.task) {
+                insertTaskToColumn(fromStatusId, { ...rolledBack.task, statusId: Number(fromStatusId) }, removed.taskIndex);
+            }
+
+            error.value = err?.response?._data?.message || err?.message || 'Failed to move task';
             throw err;
         }
     };
-    const moveTask = async (projectId, taskId, fromStatusId, toStatusId) => {
-        if (fromStatusId === toStatusId) return;
-        try {
-            const fromColumn = board.value.find((col) => col.statusId === fromStatusId);
-            const toColumn = board.value.find((col) => col.statusId === toStatusId);
-            console.log(projectId);
-            if (!fromColumn || !toColumn) return;
-            const taskIndex = fromColumn.tasks?.findIndex((t) => t.id === taskId);
-            if (taskIndex === -1 || taskIndex === undefined) return;
-            const task = fromColumn.tasks[taskIndex];
-            fromColumn.tasks.splice(taskIndex, 1);
-            if (!toColumn.tasks) toColumn.tasks = [];
-            toColumn.tasks.push({ ...task, statusId: toStatusId });
-            const { $api } = useNuxtApp();
-            await $api(`/tasks/${taskId}/move`, {
-                method: 'PATCH',
-                body: { statusId: toStatusId },
-            });
-        } catch (err) {
-            error.value = 'Failed to move task';
-            console.error('Task move error:', err);
-            throw err;
-        }
-    };
+
     const openCreateModal = (statusId) => {
         selectedStatusId.value = statusId;
         isCreateModalOpen.value = true;
     };
+
     const openDetailModal = (task) => {
         selectedTask.value = task;
         isDetailModalOpen.value = true;
     };
+
     const openUpdateModal = (task) => {
         selectedTask.value = task;
         isUpdateModalOpen.value = true;
     };
+
     const closeModals = () => {
         isCreateModalOpen.value = false;
         isDetailModalOpen.value = false;
@@ -126,6 +211,7 @@ export const useBoardStore = defineStore('board', () => {
         selectedTask.value = null;
         selectedStatusId.value = null;
     };
+
     return {
         board,
         selectedTask,
@@ -139,6 +225,7 @@ export const useBoardStore = defineStore('board', () => {
         createTask,
         updateTask,
         deleteTask,
+        reorderTaskLocally,
         moveTask,
         openCreateModal,
         openDetailModal,

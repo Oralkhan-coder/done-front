@@ -12,8 +12,7 @@ export const useTaskStore = defineStore('task', () => {
 
             return response;
         } catch (err) {
-            error.value = 'Failed to fetch task';
-            console.error('Task fetch error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to fetch task';
             throw err;
         } finally {
             isLoading.value = false;
@@ -33,8 +32,7 @@ export const useTaskStore = defineStore('task', () => {
 
             return response;
         } catch (err) {
-            error.value = 'Failed to update task';
-            console.error('Task update error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to update task';
             throw err;
         } finally {
             isLoading.value = false;
@@ -54,8 +52,7 @@ export const useTaskStore = defineStore('task', () => {
 
             return response;
         } catch (err) {
-            error.value = 'Failed to create task';
-            console.error('Task creation error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to create task';
             throw err;
         } finally {
             isLoading.value = false;
@@ -72,8 +69,7 @@ export const useTaskStore = defineStore('task', () => {
                 method: 'DELETE',
             });
         } catch (err) {
-            error.value = 'Failed to delete task';
-            console.error('Task deletion error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to delete task';
             throw err;
         } finally {
             isLoading.value = false;
@@ -93,8 +89,7 @@ export const useTaskStore = defineStore('task', () => {
 
             return response;
         } catch (err) {
-            error.value = 'Failed to move task';
-            console.error('Task move error:', err);
+            error.value = err?.response?._data?.message || err?.message || 'Failed to move task';
             throw err;
         } finally {
             isLoading.value = false;
