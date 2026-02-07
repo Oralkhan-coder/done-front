@@ -19,7 +19,7 @@
 
             <TransitionGroup name="task-list" tag="div">
                 <BoardTaskCard v-for="task in column.tasks" :key="task.id" :task="task" :status-id="column.statusId"
-                    @click="handleTaskClick(task)" />
+                    @click="handleTaskClick(task)" @update="handleTaskUpdate" @delete="handleTaskDelete" />
             </TransitionGroup>
             <div v-if="!column.tasks || column.tasks.length === 0" class="empty-state">
                 <Icon name="carbon:document-blank" size="32" class="empty-icon" />
@@ -74,6 +74,27 @@ const handleTaskCreated = (newTask) => {
 const handleCancelCreate = () => {
     showInlineCreate.value = false;
 };
+
+const handleTaskUpdate = (updatedTask) => {
+    const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
+    if (column && column.tasks) {
+        const taskIndex = column.tasks.findIndex((t) => t.id === updatedTask.id);
+        if (taskIndex !== -1) {
+            column.tasks[taskIndex] = { ...column.tasks[taskIndex], ...updatedTask };
+        }
+    }
+};
+
+const handleTaskDelete = (deletedTask) => {
+    const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
+    if (column && column.tasks) {
+        const taskIndex = column.tasks.findIndex((t) => t.id === deletedTask.id);
+        if (taskIndex !== -1) {
+            column.tasks.splice(taskIndex, 1);
+        }
+    }
+};
+
 const handleDragOver = (event) => {
     event.preventDefault();
     isDragOver.value = true;
