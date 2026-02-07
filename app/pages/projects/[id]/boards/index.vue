@@ -45,6 +45,9 @@
 
         <!-- Task Detail Modal -->
         <BoardTaskDetailModal :is-open="boardStore.isDetailModalOpen" :task="boardStore.selectedTask" />
+
+        <!-- Task Update Modal -->
+        <BoardTaskUpdateModal :is-open="boardStore.isUpdateModalOpen" :task="boardStore.selectedTask" />
     </div>
 </template>
 

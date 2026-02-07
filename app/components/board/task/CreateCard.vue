@@ -2,25 +2,14 @@
     <div class="task-card create-card">
         <div class="priority-indicator priority-medium"></div>
         <div class="task-card-content">
-            <input
-                ref="titleInput"
-                v-model="formData.title"
-                type="text"
-                class="task-title-input"
-                placeholder="Enter task title..."
-                @keydown.enter="handleSubmit"
-                @keydown.escape="handleCancel"
-            />
+            <input ref="titleInput" v-model="formData.title" type="text" class="task-title-input"
+                placeholder="Enter task title..." @keydown.enter="handleSubmit" @keydown.escape="handleCancel" />
             <div class="task-footer">
                 <div class="flex items-center gap-2">
                     <!-- Assignee Dropdown -->
-                    <div
-                        ref="assigneeButton"
-                        class="assignee-avatar clickable"
-                        :class="{ unassigned: !selectedAssignee }"
-                        :title="selectedAssignee?.label || 'Select assignee'"
-                        @click="toggleAssigneeDropdown"
-                    >
+                    <div ref="assigneeButton" class="assignee-avatar clickable"
+                        :class="{ unassigned: !selectedAssignee }" :title="selectedAssignee?.label || 'Select assignee'"
+                        @click="toggleAssigneeDropdown">
                         <span v-if="!selectedAssignee">
                             <Icon name="carbon:user" size="14" />
                         </span>
@@ -30,11 +19,8 @@
                     </div>
 
                     <!-- Priority Dropdown -->
-                    <span
-                        ref="priorityButton"
-                        :class="['priority-badge', 'clickable', `priority-${formData.priority}`]"
-                        @click="togglePriorityDropdown"
-                    >
+                    <span ref="priorityButton" :class="['priority-badge', 'clickable', `priority-${formData.priority}`]"
+                        @click="togglePriorityDropdown">
                         {{ getPriorityLabel(formData.priority) }}
                     </span>
                 </div>
@@ -42,13 +28,8 @@
                     <button type="button" class="cancel-btn" @click="handleCancel" title="Cancel">
                         <Icon name="carbon:close" size="16" />
                     </button>
-                    <button
-                        type="button"
-                        class="submit-btn"
-                        @click="handleSubmit"
-                        :disabled="!formData.title.trim() || isSubmitting"
-                        title="Create task"
-                    >
+                    <button type="button" class="submit-btn" @click="handleSubmit"
+                        :disabled="!formData.title.trim() || isSubmitting" title="Create task">
                         <Icon name="carbon:checkmark" size="16" />
                     </button>
                 </div>
@@ -61,12 +42,8 @@
                 <div v-if="projectMembers.length === 0 && !loadingMembers" class="dropdown-loading">
                     No members found
                 </div>
-                <div
-                    v-for="member in projectMembers"
-                    :key="member.value || 'none'"
-                    class="dropdown-item"
-                    @click="selectAssignee(member)"
-                >
+                <div v-for="member in projectMembers" :key="member.value || 'none'" class="dropdown-item"
+                    @click="selectAssignee(member)">
                     <div class="assignee-avatar-small" :class="{ unassigned: member.value === null }">
                         <span v-if="member.value === null">
                             <Icon name="carbon:user" size="12" />
@@ -84,12 +61,8 @@
         <!-- Priority Dropdown -->
         <OverlayPanel ref="priorityPanel" :style="{ width: '150px' }">
             <div class="dropdown-content">
-                <div
-                    v-for="priority in priorities"
-                    :key="priority.value"
-                    class="dropdown-item"
-                    @click="selectPriority(priority.value)"
-                >
+                <div v-for="priority in priorities" :key="priority.value" class="dropdown-item"
+                    @click="selectPriority(priority.value)">
                     <span :class="['priority-indicator-small', `priority-${priority.value}`]"></span>
                     <span>{{ priority.label }}</span>
                 </div>
@@ -134,7 +107,6 @@ const priorities = [
     { label: 'Critical', value: 'critical' },
 ];
 
-// Use computed to get project members from store
 const projectMembers = computed(() => {
     return projectUsersStore.getUsersForDropdown(true);
 });

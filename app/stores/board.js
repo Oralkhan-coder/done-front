@@ -3,6 +3,7 @@ export const useBoardStore = defineStore('board', () => {
     const selectedTask = ref(null);
     const isCreateModalOpen = ref(false);
     const isDetailModalOpen = ref(false);
+    const isUpdateModalOpen = ref(false);
     const selectedStatusId = ref(null);
     const isLoading = ref(false);
     const error = ref(null);
@@ -112,9 +113,14 @@ export const useBoardStore = defineStore('board', () => {
         selectedTask.value = task;
         isDetailModalOpen.value = true;
     };
+    const openUpdateModal = (task) => {
+        selectedTask.value = task;
+        isUpdateModalOpen.value = true;
+    };
     const closeModals = () => {
         isCreateModalOpen.value = false;
         isDetailModalOpen.value = false;
+        isUpdateModalOpen.value = false;
         selectedTask.value = null;
         selectedStatusId.value = null;
     };
@@ -123,6 +129,7 @@ export const useBoardStore = defineStore('board', () => {
         selectedTask,
         isCreateModalOpen,
         isDetailModalOpen,
+        isUpdateModalOpen,
         selectedStatusId,
         isLoading,
         error,
@@ -133,6 +140,7 @@ export const useBoardStore = defineStore('board', () => {
         moveTask,
         openCreateModal,
         openDetailModal,
+        openUpdateModal,
         closeModals,
     };
 });
