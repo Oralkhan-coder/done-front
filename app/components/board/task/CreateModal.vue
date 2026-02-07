@@ -12,71 +12,38 @@
                     <form @submit.prevent="handleSubmit" class="modal-body">
                         <div class="form-group">
                             <label for="task-title" class="form-label required">Title</label>
-                            <InputText
-                                id="task-title"
-                                v-model="formData.title"
-                                placeholder="Enter task title"
-                                class="w-full"
-                                :class="{ 'p-invalid': errors.title }"
-                            />
+                            <InputText id="task-title" v-model="formData.title" placeholder="Enter task title"
+                                class="w-full" :class="{ 'p-invalid': errors.title }" />
                             <small v-if="errors.title" class="error-message">{{ errors.title }}</small>
                         </div>
                         <div class="form-group">
                             <label for="task-description" class="form-label">Description</label>
-                            <Textarea
-                                id="task-description"
-                                v-model="formData.description"
-                                placeholder="Add a description..."
-                                rows="4"
-                                class="w-full"
-                            />
+                            <Textarea id="task-description" v-model="formData.description"
+                                placeholder="Add a description..." rows="4" class="w-full" />
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="task-priority" class="form-label">Priority</label>
-                                <Select
-                                    id="task-priority"
-                                    v-model="formData.priority"
-                                    :options="priorities"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Select priority"
-                                    class="w-full"
-                                />
+                                <Select id="task-priority" v-model="formData.priority" :options="priorities"
+                                    optionLabel="label" optionValue="value" placeholder="Select priority"
+                                    class="w-full" />
                             </div>
                             <div class="form-group">
                                 <label for="task-story-point" class="form-label">Story Points</label>
-                                <InputNumber
-                                    id="task-story-point"
-                                    v-model="formData.storyPoint"
-                                    placeholder="Enter story points"
-                                    class="w-full"
-                                    :min="0"
-                                />
+                                <InputNumber id="task-story-point" v-model="formData.storyPoint"
+                                    placeholder="Enter story points" class="w-full" :min="0" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="task-assignee" class="form-label">Assignee</label>
-                            <Select
-                                id="task-assignee"
-                                v-model="formData.assigneeId"
-                                :options="projectMembers"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Select assignee"
-                                class="w-full"
-                                :loading="loadingMembers"
-                            />
+                            <Select id="task-assignee" v-model="formData.assigneeId" :options="projectMembers"
+                                optionLabel="label" optionValue="value" placeholder="Select assignee" class="w-full"
+                                :loading="loadingMembers" />
                         </div>
                         <div class="modal-actions">
                             <Button label="Cancel" severity="secondary" outlined @click="handleClose" type="button" />
-                            <Button
-                                label="Create Task"
-                                icon="carbon:add"
-                                :loading="isSubmitting"
-                                type="submit"
-                                class="bg-indigo-600 border-indigo-600"
-                            />
+                            <Button label="Create Task" icon="carbon:add" :loading="isSubmitting" type="submit"
+                                class="bg-indigo-600 border-indigo-600" />
                         </div>
                     </form>
                 </div>
@@ -121,7 +88,6 @@ const priorities = [
     { label: 'Critical', value: 'critical' },
 ];
 
-// Use computed to get project members from store
 const projectMembers = computed(() => {
     return projectUsersStore.getUsersForDropdown(true);
 });

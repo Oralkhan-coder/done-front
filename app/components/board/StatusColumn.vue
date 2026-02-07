@@ -54,18 +54,16 @@ const handleAddTask = () => {
 };
 
 const handleTaskClick = (task) => {
-    boardStore.openDetailModal(task);
+    boardStore.openUpdateModal(task);
 };
 
 const handleTaskCreated = (newTask) => {
     console.log('Received task from CreateCard:', newTask);
 
-    // Add the new task to the column
     const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
     if (column) {
         if (!column.tasks) column.tasks = [];
 
-        // Use the full response from the API
         column.tasks.unshift(newTask);
 
         console.log('Task added to column:', newTask);
