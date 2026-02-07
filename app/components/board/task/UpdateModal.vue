@@ -251,28 +251,28 @@ const handleSubmit = async () => {
 };
 
 watch(
-    () => props.task,
-    (newTask) => {
-        if (newTask) {
-            loadFormData();
-        }
-    },
-    { immediate: true },
-);
+    [() => props.isOpen, () => props.task],
+    ([newIsOpen, newTask], [oldIsOpen, oldTask]) => {
+        if (newIsOpen) {
+            // Check if modal just opened or if the task changed while open
+            const isJustOpened = !oldIsOpen;
+            const isTaskChanged = newTask?.id !== oldTask?.id;
 
-watch(
-    () => props.isOpen,
-    (newVal) => {
-        if (newVal) {
-            if (route.params.id) {
+            if (isJustOpened && route.params.id) {
                 projectUsersStore.fetchProjectUsers(route.params.id);
                 statusStore.fetchStatuses(route.params.id);
             }
-            loadFormData();
+
+            if (isJustOpened || isTaskChanged) {
+                loadFormData();
+            }
         } else {
-            resetForm();
+            if (oldIsOpen) {
+                resetForm();
+            }
         }
     },
+    { immediate: true },
 );
 </script>
 <style scoped>

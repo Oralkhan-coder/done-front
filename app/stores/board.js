@@ -7,6 +7,7 @@ export const useBoardStore = defineStore('board', () => {
     const selectedStatusId = ref(null);
     const isLoading = ref(false);
     const error = ref(null);
+
     const getBoard = async (route) => {
         isLoading.value = true;
         error.value = null;
@@ -20,6 +21,7 @@ export const useBoardStore = defineStore('board', () => {
             isLoading.value = false;
         }
     };
+
     const createTask = async (projectId, statusId, taskData) => {
         try {
             const { $api } = useNuxtApp();

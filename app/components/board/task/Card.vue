@@ -1,39 +1,32 @@
 <template>
-    <div
-        class="task-card group"
-        draggable="true"
-        @dragstart="handleDragStart"
-        @dragend="handleDragEnd"
-        @click="handleClick"
-    >
-        <div :class="['priority-indicator', `priority-${task.priority || 'medium'}`]"></div>
+    <div class="task-card group" draggable="true" @dragstart="handleDragStart" @dragend="handleDragEnd"
+        @click="handleClick">
+        <div :class="['priority-indicator', getPriorityClass(task.priority)]"></div>
         <div class="task-card-content">
             <div class="task-header">
                 <div class="flex items-center gap-2">
-                    <Icon
-                        :name="getTaskTypeIcon(task.type)"
-                        :class="['task-type-icon', `type-${task.type || 'task'}`]"
-                        size="16"
-                    />
                     <span class="task-id">{{ task.code || `#${task.id}` }}</span>
                 </div>
-                <div class="drag-handle opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Icon name="carbon:draggable" size="16" class="text-slate-400" />
+                <div ref="menuButton" class="drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
+                    @click.stop="toggleMenu">
+                    <Icon name="carbon:overflow-menu-horizontal" size="24" class="text-slate-400" />
                 </div>
             </div>
             <h4 class="task-title">{{ task.title }}</h4>
             <div class="task-footer">
                 <div class="flex items-center gap-2">
-                    <div v-if="task.assignee" class="assignee-avatar" :title="task.assignee.name">
-                        <span v-if="!task.assignee.avatar">
+                    <div ref="assigneeButton" :class="['assignee-avatar', 'clickable', { unassigned: !task.assignee }]"
+                        :title="task.assignee?.name || 'Select assignee'" @click.stop="toggleAssigneeDropdown">
+                        <span v-if="!task.assignee">
+                            <Icon name="carbon:user" size="14" />
+                        </span>
+                        <span v-else-if="!task.assignee.avatar">
                             {{ getInitials(task.assignee.name) }}
                         </span>
                         <img v-else :src="task.assignee.avatar" :alt="task.assignee.name" />
                     </div>
-                    <div v-else class="assignee-avatar unassigned" title="Unassigned">
-                        <Icon name="carbon:user" size="14" />
-                    </div>
-                    <span :class="['priority-badge', `priority-${task.priority || 'medium'}`]">
+                    <span ref="priorityButton" :class="['priority-badge', 'clickable', getPriorityClass(task.priority)]"
+                        @click.stop="togglePriorityDropdown">
                         {{ getPriorityLabel(task.priority) }}
                     </span>
                 </div>
@@ -43,6 +36,46 @@
                 </div>
             </div>
         </div>
+
+        <OverlayPanel ref="assigneePanel" :style="{ width: '200px' }">
+            <div class="dropdown-content">
+                <div v-if="projectMembers.length === 0 && !loadingMembers" class="dropdown-loading">
+                    No members found
+                </div>
+                <div v-for="member in projectMembers" :key="member.value || 'none'" class="dropdown-item"
+                    @click="selectAssignee(member)">
+                    <div class="assignee-avatar-small" :class="{ unassigned: member.value === null }">
+                        <span v-if="member.value === null">
+                            <Icon name="carbon:user" size="12" />
+                        </span>
+                        <span v-else>
+                            {{ getInitials(member.label) }}
+                        </span>
+                    </div>
+                    <span>{{ member.label }}</span>
+                </div>
+                <div v-if="loadingMembers" class="dropdown-loading">Loading...</div>
+            </div>
+        </OverlayPanel>
+
+        <OverlayPanel ref="priorityPanel" :style="{ width: '150px' }">
+            <div class="dropdown-content">
+                <div v-for="priority in priorities" :key="priority.value" class="dropdown-item"
+                    @click="selectPriority(priority.value)">
+                    <span :class="['priority-indicator-small', getPriorityClass(priority.value)]"></span>
+                    <span>{{ priority.label }}</span>
+                </div>
+            </div>
+        </OverlayPanel>
+
+        <OverlayPanel ref="menuPanel" :style="{ width: '150px' }">
+            <div class="dropdown-content">
+                <div class="dropdown-item delete-item" @click="handleDelete">
+                    <Icon name="carbon:trash-can" size="16" />
+                    <span>Delete</span>
+                </div>
+            </div>
+        </OverlayPanel>
     </div>
 </template>
 <script setup>
@@ -56,7 +89,34 @@ const props = defineProps({
         required: true,
     },
 });
-const emit = defineEmits(['click', 'dragstart', 'dragend']);
+
+const emit = defineEmits(['click', 'dragstart', 'dragend', 'update', 'delete']);
+
+const projectUsersStore = useProjectUsersStore();
+const taskStore = useTaskStore();
+
+const assigneePanel = ref(null);
+const priorityPanel = ref(null);
+const menuPanel = ref(null);
+const assigneeButton = ref(null);
+const priorityButton = ref(null);
+const menuButton = ref(null);
+
+const priorities = [
+    { label: 'Low', value: 'low' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'High', value: 'high' },
+    { label: 'Critical', value: 'critical' },
+];
+
+const projectMembers = computed(() => {
+    return projectUsersStore.getUsersForDropdown(true);
+});
+
+const loadingMembers = computed(() => {
+    return projectUsersStore.isLoading;
+});
+
 const handleDragStart = (event) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('taskId', props.task.id.toString());
@@ -64,22 +124,104 @@ const handleDragStart = (event) => {
     event.target.classList.add('dragging');
     emit('dragstart', props.task);
 };
+
 const handleDragEnd = (event) => {
     event.target.classList.remove('dragging');
     emit('dragend', props.task);
 };
+
 const handleClick = () => {
     emit('click', props.task);
 };
-const getTaskTypeIcon = (type) => {
-    const icons = {
-        bug: 'carbon:debug',
-        feature: 'carbon:star',
-        story: 'carbon:book',
-        task: 'carbon:checkbox',
-    };
-    return icons[type] || icons.task;
+
+const toggleAssigneeDropdown = (event) => {
+    event.stopPropagation();
+    assigneePanel.value.toggle(event);
 };
+
+const togglePriorityDropdown = (event) => {
+    event.stopPropagation();
+    priorityPanel.value.toggle(event);
+};
+
+const toggleMenu = (event) => {
+    event.stopPropagation();
+    menuPanel.value.toggle(event);
+};
+
+const selectAssignee = async (member) => {
+    try {
+        const updates = {
+            title: props.task.title,
+            description: props.task.description || '',
+            statusId: props.task.statusId,
+            priority: props.task.priority || 'medium',
+            assigneeId: member.value,
+        };
+
+        if (props.task.storyPoint) {
+            updates.storyPoint = props.task.storyPoint;
+        }
+
+        await taskStore.updateTask(props.task.id, updates);
+
+        emit('update', {
+            ...props.task,
+            assigneeId: member.value,
+            assignee: member.value ? { userId: member.value, name: member.label } : null,
+        });
+
+        assigneePanel.value.hide();
+    } catch (error) {
+        console.error('Failed to update assignee:', error);
+    }
+};
+
+const selectPriority = async (priority) => {
+    try {
+        const updates = {
+            title: props.task.title,
+            description: props.task.description || '',
+            statusId: props.task.statusId,
+            priority: priority,
+        };
+
+        if (props.task.assigneeId) {
+            updates.assigneeId = props.task.assigneeId;
+        }
+
+        if (props.task.storyPoint) {
+            updates.storyPoint = props.task.storyPoint;
+        }
+
+        await taskStore.updateTask(props.task.id, updates);
+
+        emit('update', {
+            ...props.task,
+            priority: priority,
+        });
+
+        priorityPanel.value.hide();
+    } catch (error) {
+        console.error('Failed to update priority:', error);
+    }
+};
+
+const handleDelete = async () => {
+    try {
+        await taskStore.deleteTask(props.task.id);
+        emit('delete', props.task);
+        menuPanel.value.hide();
+    } catch (error) {
+        console.error('Failed to delete task:', error);
+    }
+};
+
+const getPriorityClass = (priority) => {
+    const p = (priority || 'medium').toLowerCase();
+    return `priority-${p}`;
+};
+
 const getPriorityLabel = (priority) => {
     const labels = {
         low: 'Low',
@@ -87,8 +229,10 @@ const getPriorityLabel = (priority) => {
         high: 'High',
         critical: 'Critical',
     };
-    return labels[priority] || labels.medium;
+    const p = (priority || 'medium').toLowerCase();
+    return labels[p] || labels.medium;
 };
+
 const getInitials = (name) => {
     if (!name) return '?';
     return name
@@ -98,10 +242,7 @@ const getInitials = (name) => {
         .toUpperCase()
         .slice(0, 2);
 };
-const truncateText = (text, maxLength) => {
-    if (!text || text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
-};
+
 const formatDueDate = (date) => {
     if (!date) return '';
     const dueDate = new Date(date);
@@ -114,6 +255,7 @@ const formatDueDate = (date) => {
     if (diffDays < 7) return `${diffDays}d`;
     return dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
+
 const isOverdue = (date) => {
     if (!date) return false;
     return new Date(date) < new Date();
@@ -242,6 +384,16 @@ const isOverdue = (date) => {
     font-weight: 600;
     flex-shrink: 0;
     border: 2px solid white;
+    transition: all 0.2s ease;
+}
+
+.assignee-avatar.clickable {
+    cursor: pointer;
+}
+
+.assignee-avatar.clickable:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-300);
 }
 
 .assignee-avatar.unassigned {
@@ -263,6 +415,16 @@ const isOverdue = (date) => {
     border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+.priority-badge.clickable {
+    cursor: pointer;
+}
+
+.priority-badge.clickable:hover {
+    transform: scale(1.05);
+    opacity: 0.8;
 }
 
 .priority-badge.priority-low {
@@ -300,5 +462,85 @@ const isOverdue = (date) => {
 
 .due-date.overdue :deep(svg) {
     color: #dc2626;
+}
+
+.drag-handle {
+    cursor: pointer;
+}
+
+.dropdown-content {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 13px;
+}
+
+.dropdown-item:hover {
+    background: var(--surface-100);
+}
+
+.dropdown-item.delete-item {
+    color: #dc2626;
+}
+
+.dropdown-item.delete-item:hover {
+    background: #fee2e2;
+}
+
+.assignee-avatar-small {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-100);
+    color: var(--primary-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.assignee-avatar-small.unassigned {
+    background: var(--surface-100);
+    color: var(--surface-400);
+}
+
+.priority-indicator-small {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.priority-indicator-small.priority-low {
+    background: #22c55e;
+}
+
+.priority-indicator-small.priority-medium {
+    background: #f59e0b;
+}
+
+.priority-indicator-small.priority-high {
+    background: #ef4444;
+}
+
+.priority-indicator-small.priority-critical {
+    background: #dc2626;
+}
+
+.dropdown-loading {
+    padding: 12px;
+    text-align: center;
+    color: var(--surface-500);
+    font-size: 13px;
 }
 </style>
