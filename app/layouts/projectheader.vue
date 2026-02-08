@@ -51,6 +51,11 @@ const tabs = computed(() => [
         path: `/projects/${route.params.id}/boards`,
         icon: 'carbon:grid',
     },
+    {
+        name: 'Wiki',
+        path: `/projects/${route.params.id}/wiki`,
+        icon: 'carbon:notebook',
+    },
 ]);
 </script>
 <style scoped>
