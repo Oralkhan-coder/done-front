@@ -1,6 +1,8 @@
 export const useTaskStore = defineStore('task', () => {
     const isLoading = ref(false);
     const error = ref(null);
+    const historyLoading = ref(false);
+    const historyError = ref(null);
 
     const getTaskById = async (taskId) => {
         isLoading.value = true;
@@ -101,13 +103,34 @@ export const useTaskStore = defineStore('task', () => {
         }
     };
 
+    const getTaskHistory = async (taskId) => {
+        historyLoading.value = true;
+        historyError.value = null;
+
+        try {
+            const { $api } = useNuxtApp();
+            const response = await $api(`/tasks/${taskId}/history`);
+
+            return response;
+        } catch (err) {
+            historyError.value = 'Failed to fetch task history';
+            console.error('Task history fetch error:', err);
+            throw err;
+        } finally {
+            historyLoading.value = false;
+        }
+    };
+
     return {
         isLoading,
         error,
+        historyLoading,
+        historyError,
         getTaskById,
         updateTask,
         createTask,
         deleteTask,
         moveTask,
+        getTaskHistory,
     };
 });
