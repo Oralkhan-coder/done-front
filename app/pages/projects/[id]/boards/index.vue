@@ -13,8 +13,9 @@
         </div>
 
 
-        <!-- Invited Success Message -->
-        <div v-if="showInvitedMessage" class="mx-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between animate-fade-in-down">
+
+        <div v-if="showInvitedMessage"
+            class="mx-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between animate-fade-in-down">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                     <Icon name="carbon:checkmark-filled" size="20" />
@@ -24,18 +25,19 @@
                     <p class="text-sm text-green-700">You have added this project by invitation.</p>
                 </div>
             </div>
-            <button @click="showInvitedMessage = false" class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors">
+            <button @click="showInvitedMessage = false"
+                class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors">
                 <Icon name="carbon:close" size="20" />
             </button>
         </div>
 
-        <!-- Loading State -->
+
         <div v-if="boardStore.isLoading && !boardStore.board.length" class="loading-state">
             <Icon name="carbon:renew" size="48" class="spinning" />
             <p>Loading board...</p>
         </div>
 
-        <!-- Error State -->
+
         <div v-else-if="boardStore.error" class="error-state">
             <Icon name="carbon:warning" size="48" />
             <h3>Failed to load board</h3>
@@ -43,13 +45,13 @@
             <Button label="Retry" icon="carbon:renew" @click="handleRefresh" outlined />
         </div>
 
-        <!-- Board Columns -->
+
         <div v-else class="board-container">
             <div class="board-columns">
                 <BoardStatusColumn v-for="column in filteredBoard" :key="column.statusId" :column="column" />
             </div>
 
-            <!-- Empty State -->
+
             <div v-if="!boardStore.board.length" class="empty-board">
                 <Icon name="carbon:grid" size="64" class="empty-icon" />
                 <h3>No status columns found</h3>
@@ -57,13 +59,13 @@
             </div>
         </div>
 
-        <!-- Create Task Modal -->
+
         <BoardTaskCreateModal :is-open="boardStore.isCreateModalOpen" :status-id="boardStore.selectedStatusId || 0" />
 
-        <!-- Task Detail Modal -->
+
         <BoardTaskDetailModal :is-open="boardStore.isDetailModalOpen" :task="boardStore.selectedTask" />
 
-        <!-- Task Update Modal -->
+
         <BoardTaskUpdateModal :is-open="boardStore.isUpdateModalOpen" :task="boardStore.selectedTask" />
     </div>
 </template>
@@ -80,12 +82,12 @@ const showInvitedMessage = ref(false);
 onMounted(() => {
     if (route.query.invited) {
         showInvitedMessage.value = true;
-        // Clean up query param
+
         const query = { ...route.query };
         delete query.invited;
         useRouter().replace({ query });
-        
-        // Auto dismiss after 5 seconds
+
+
         setTimeout(() => {
             showInvitedMessage.value = false;
         }, 5000);
@@ -134,15 +136,15 @@ const handleRefresh = async () => {
     height: 100%;
 }
 
-/* Toolbar */
+
 .board-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    /* Added horizontal padding */
+
     margin-bottom: 0;
-    /* Reduced margin since we have padding */
+
     gap: 16px;
     flex-wrap: wrap;
     flex-shrink: 0;
@@ -194,25 +196,25 @@ const handleRefresh = async () => {
     color: var(--surface-400);
 }
 
-/* Board Container */
+
 .board-container {
     flex: 1;
     overflow: auto;
-    /* Enable both X and Y scrolling */
+
     padding: 0 16px 16px 16px;
-    /* Added horizontal padding */
+
 }
 
 .board-columns {
     display: flex;
     gap: 16px;
     height: 100%;
-    /* Force full height */
+
     padding: 4px 0;
     align-items: flex-start;
 }
 
-/* Loading State */
+
 .loading-state {
     display: flex;
     flex-direction: column;
@@ -227,7 +229,7 @@ const handleRefresh = async () => {
     font-size: 14px;
 }
 
-/* Error State */
+
 .error-state {
     display: flex;
     flex-direction: column;
@@ -255,7 +257,7 @@ const handleRefresh = async () => {
     margin: 0 0 24px 0;
 }
 
-/* Empty Board */
+
 .empty-board {
     display: flex;
     flex-direction: column;
@@ -283,7 +285,7 @@ const handleRefresh = async () => {
     margin: 0;
 }
 
-/* Spinning Animation */
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -298,7 +300,7 @@ const handleRefresh = async () => {
     animation: spin 1s linear infinite;
 }
 
-/* Scrollbar */
+
 .board-container::-webkit-scrollbar {
     height: 10px;
 }
@@ -317,7 +319,7 @@ const handleRefresh = async () => {
     background: var(--surface-400);
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
     .board-toolbar {
         flex-direction: column;

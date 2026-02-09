@@ -6,7 +6,7 @@
                 placeholder="Enter task title..." @keydown.enter="handleSubmit" @keydown.escape="handleCancel" />
             <div class="task-footer">
                 <div class="flex items-center gap-2">
-                    <!-- Assignee Dropdown -->
+
                     <div ref="assigneeButton" class="assignee-avatar clickable"
                         :class="{ unassigned: !selectedAssignee }" :title="selectedAssignee?.label || 'Select assignee'"
                         @click="toggleAssigneeDropdown">
@@ -18,7 +18,7 @@
                         </span>
                     </div>
 
-                    <!-- Priority Dropdown -->
+
                     <span ref="priorityButton" :class="['priority-badge', 'clickable', `priority-${formData.priority}`]"
                         @click="togglePriorityDropdown">
                         {{ getPriorityLabel(formData.priority) }}
@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <!-- Assignee Dropdown -->
+
         <OverlayPanel ref="assigneePanel" :style="{ width: '200px' }">
             <div class="dropdown-content">
                 <div v-if="projectMembers.length === 0 && !loadingMembers" class="dropdown-loading">
@@ -58,7 +58,7 @@
             </div>
         </OverlayPanel>
 
-        <!-- Priority Dropdown -->
+
         <OverlayPanel ref="priorityPanel" :style="{ width: '150px' }">
             <div class="dropdown-content">
                 <div v-for="priority in priorities" :key="priority.value" class="dropdown-item"
@@ -411,7 +411,7 @@ onMounted(() => {
     cursor: not-allowed;
 }
 
-/* Dropdown Styles */
+
 .dropdown-content {
     max-height: 250px;
     overflow-y: auto;

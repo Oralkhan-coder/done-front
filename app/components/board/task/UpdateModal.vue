@@ -78,7 +78,8 @@
                                         <div class="history-dot"></div>
                                         <div class="history-content">
                                             <div class="history-line">
-                                                <span class="history-message">{{ getHistoryMessage(entry, index) }}</span>
+                                                <span class="history-message">{{ getHistoryMessage(entry, index)
+                                                    }}</span>
                                             </div>
                                             <div class="history-meta">
                                                 <span v-if="getHistoryActor(entry)" class="history-actor">
@@ -362,7 +363,7 @@ const ensureStatusesLoaded = async () => {
     try {
         await statusStore.fetchStatuses(route.params.id);
     } catch (error) {
-        // Ignore status fetch errors; history can still render with raw values.
+
     }
 };
 
@@ -458,7 +459,7 @@ const handleSubmit = async () => {
         const oldStatusId = props.task.statusId;
         const newStatusId = formData.statusId;
 
-        // If status changed, move task between columns
+
         if (oldStatusId !== newStatusId) {
             const fromColumn = boardStore.board.find((col) => col.statusId === oldStatusId);
             const toColumn = boardStore.board.find((col) => col.statusId === newStatusId);
@@ -509,7 +510,7 @@ watch(
     [() => props.isOpen, () => props.task],
     ([newIsOpen, newTask], [oldIsOpen, oldTask]) => {
         if (newIsOpen) {
-            // Check if modal just opened or if the task changed while open
+
             const isJustOpened = !oldIsOpen;
             const isTaskChanged = newTask?.id !== oldTask?.id;
 
@@ -637,17 +638,20 @@ watch(
     padding-top: 24px;
     border-top: 1px solid var(--surface-200);
 }
+
 .history-section {
     margin-top: 12px;
     padding-top: 8px;
     border-top: 1px solid var(--surface-200);
 }
+
 .history-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
 }
+
 .history-refresh {
     display: inline-flex;
     align-items: center;
@@ -662,11 +666,13 @@ watch(
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .history-refresh:hover {
     color: var(--surface-900);
     border-color: var(--surface-300);
     background: var(--surface-50);
 }
+
 .history-state {
     display: flex;
     align-items: center;
@@ -677,11 +683,13 @@ watch(
     border: 1px dashed var(--surface-200);
     border-radius: 8px;
 }
+
 .history-state.error {
     color: #dc2626;
     border-color: #fecaca;
     background: #fef2f2;
 }
+
 .history-empty {
     font-size: 13px;
     color: var(--surface-400);
@@ -689,6 +697,7 @@ watch(
     border: 1px dashed var(--surface-200);
     border-radius: 8px;
 }
+
 .history-list {
     list-style: none;
     padding: 0;
@@ -697,11 +706,13 @@ watch(
     flex-direction: column;
     gap: 12px;
 }
+
 .history-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
 }
+
 .history-dot {
     width: 10px;
     height: 10px;
@@ -711,6 +722,7 @@ watch(
     flex-shrink: 0;
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
+
 .history-content {
     flex: 1;
     display: flex;
@@ -721,11 +733,13 @@ watch(
     border-radius: 10px;
     background: white;
 }
+
 .history-message {
     font-size: 13px;
     color: var(--surface-800);
     font-weight: 600;
 }
+
 .history-meta {
     display: flex;
     flex-wrap: wrap;
@@ -733,6 +747,7 @@ watch(
     font-size: 11px;
     color: var(--surface-500);
 }
+
 .history-actor {
     font-weight: 600;
     color: var(--surface-700);

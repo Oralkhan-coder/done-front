@@ -46,5 +46,12 @@ export const useProjectStore = defineStore('project', () => {
             return item;
         });
     };
-    return { project, projects, getProject, getProjects, createProject, deleteProject, updateProject };
+    const inviteUser = async (projectId, { email, role }) => {
+        const { $api } = useNuxtApp();
+        return await $api(`/projects/${projectId}/invitations`, {
+            method: 'POST',
+            body: { email, role },
+        });
+    };
+    return { project, projects, getProject, getProjects, createProject, deleteProject, updateProject, inviteUser };
 });
