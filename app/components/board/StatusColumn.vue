@@ -11,7 +11,7 @@
         </div>
         <div class="tasks-container" :class="{ 'drag-over': isDragOver }" @dragover.prevent="handleDragOver"
             @dragleave="handleDragLeave" @drop="handleDrop">
-            <!-- Inline Create Card -->
+
             <Transition name="create-card">
                 <BoardTaskCreateCard v-if="showInlineCreate" :status-id="column.statusId" @submit="handleTaskCreated"
                     @cancel="handleCancelCreate" />

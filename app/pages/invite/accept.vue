@@ -13,10 +13,8 @@
                 </div>
                 <h2 class="text-xl font-semibold text-slate-800">Invalid Invitation</h2>
                 <p class="text-slate-500">{{ error }}</p>
-                <NuxtLink 
-                    to="/" 
-                    class="inline-block mt-4 px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors"
-                >
+                <NuxtLink to="/"
+                    class="inline-block mt-4 px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">
                     Go Home
                 </NuxtLink>
             </div>
@@ -49,7 +47,7 @@ onMounted(async () => {
     }
 
     try {
-        // Store token for later use during registration/OTP
+
         localStorage.setItem('inviteToken', token);
 
         const response = await $fetch(`http://localhost:3000/invitation/validate`, {
@@ -63,15 +61,10 @@ onMounted(async () => {
         }
 
         if (response.userExists) {
-            // If user already exists, redirect to login
-            // The user handling for existing users might need more specific requirements,
-            // but for now redirecting to login seems appropriate.
-            // Ideally, the backend might handle adding them to the project directly if they exist,
-            // or we might need another flow.
-            // For this task, we focus on the "no account" flow.
-             await navigateTo('/login?email=' + response.email);
+
+            await navigateTo('/login?email=' + response.email);
         } else {
-            // Redirect to register with prefilled email
+
             await navigateTo(`/register?email=${response.email}`);
         }
 
@@ -79,12 +72,10 @@ onMounted(async () => {
         error.value = e.message || 'Failed to validate invitation.';
     } finally {
         if (!error.value) {
-            // Keep loading true if we are redirecting to avoid flash of content
-            // or we could set it to false if we want to show the success message briefly
-            // Let's show success message briefly
-             loading.value = false;
+
+            loading.value = false;
         } else {
-             loading.value = false;
+            loading.value = false;
         }
     }
 });
