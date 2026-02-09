@@ -146,11 +146,8 @@ const togglePriorityDropdown = (event) => {
 };
 
 const selectAssignee = (member) => {
-    console.log('Selected assignee:', member);
     selectedAssignee.value = member.value ? member : null;
     formData.assigneeId = member.value;
-    console.log('Updated formData.assigneeId:', formData.assigneeId);
-    console.log('Updated selectedAssignee:', selectedAssignee.value);
     assigneePanel.value.hide();
 };
 
@@ -173,23 +170,8 @@ const handleSubmit = async () => {
             taskData.assigneeId = formData.assigneeId;
         }
 
-        const response = await boardStore.createTask(route.params.id, props.statusId, taskData);
-
-        const completeTask = {
-            ...response,
-            title: response.title || formData.title,
-            priority: response.priority || formData.priority,
-            statusId: response.statusId || props.statusId,
-        };
-
-        if (formData.assigneeId && selectedAssignee.value) {
-            completeTask.assignee = {
-                userId: formData.assigneeId,
-                name: selectedAssignee.value.label,
-            };
-        }
-
-        emit('submit', completeTask);
+        await boardStore.createTask(route.params.id, props.statusId, taskData);
+        emit('submit');
     } catch (error) {
         console.error('Failed to create task:', error);
     } finally {

@@ -1,5 +1,5 @@
 <template>
-    <div class="task-card group" draggable="true" @dragstart="handleDragStart" @dragend="handleDragEnd"
+    <div class="task-card group" :data-task-id="task.id" draggable="true" @dragstart="handleDragStart" @dragend="handleDragEnd"
         @click="handleClick">
         <div :class="['priority-indicator', getPriorityClass(task.priority)]"></div>
         <div class="task-card-content">
