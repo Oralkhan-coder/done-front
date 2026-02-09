@@ -44,14 +44,19 @@ export const useAuthStore = defineStore('auth', () => {
             throw new Error('Network error. Please try again.');
         }
     };
-    const verifyOtp = async (code) => {
+    const verifyOtp = async (code, inviteToken = null) => {
         try {
+            const query = {};
+            if (inviteToken) {
+                query.inviteToken = inviteToken;
+            }
             const response = await $fetch('http://localhost:3000/otp/check', {
                 method: 'POST',
                 body: {
                     email: registrationEmail.value,
                     code: code,
                 },
+                query: query,
             });
             registrationEmail.value = '';
             return response;
