@@ -39,7 +39,8 @@
                                     v-model="registrationData.email"
                                     type="email"
                                     required
-                                    class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-slate-900 placeholder-slate-400 transition-colors"
+                                    :disabled="isInviteFlow"
+                                    class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-slate-900 placeholder-slate-400 transition-colors disabled:bg-slate-100 disabled:text-slate-500"
                                     placeholder="name@company.com"
                                 />
                             </div>
@@ -158,6 +159,7 @@ definePageMeta({
     layout: false,
 });
 const authStore = useAuthStore();
+const route = useRoute();
 const registrationData = reactive({
     email: '',
     password: '',
@@ -169,6 +171,16 @@ const successMessage = ref('');
 const isLoading = ref(false);
 const showOtpModal = ref(false);
 const otpModalRef = ref(null);
+const isInviteFlow = ref(false);
+
+onMounted(() => {
+    const email = route.query.email;
+    if (email) {
+        registrationData.email = email;
+        isInviteFlow.value = true;
+    }
+});
+
 const handleRegister = async () => {
     errorMessage.value = '';
     successMessage.value = '';
@@ -194,9 +206,21 @@ const handleRegister = async () => {
         isLoading.value = false;
     }
 };
+
 const handleOtpSubmit = async (code) => {
     try {
-        await authStore.verifyOtp(code);
+        const inviteToken = localStorage.getItem('inviteToken');
+        const response = await authStore.verifyOtp(code, inviteToken);
+        
+        if (inviteToken && response?.projectId) {
+            localStorage.removeItem('inviteToken');
+            successMessage.value = 'Account created and invitation accepted! Redirecting to project...';
+            setTimeout(() => {
+                navigateTo(`/projects/${response.projectId}/boards?invited=true`);
+            }, 1500);
+            return;
+        }
+
         registrationData.email = '';
         registrationData.password = '';
         registrationData.fullName = '';
@@ -213,6 +237,7 @@ const handleOtpSubmit = async (code) => {
         throw error;
     }
 };
+
 const handleResendOtp = async () => {
     try {
         await authStore.resendOtp();

@@ -12,6 +12,23 @@
             </div>
         </div>
 
+
+        <!-- Invited Success Message -->
+        <div v-if="showInvitedMessage" class="mx-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between animate-fade-in-down">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <Icon name="carbon:checkmark-filled" size="20" />
+                </div>
+                <div>
+                    <h3 class="font-bold text-green-800">Welcome to the project!</h3>
+                    <p class="text-sm text-green-700">You have added this project by invitation.</p>
+                </div>
+            </div>
+            <button @click="showInvitedMessage = false" class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors">
+                <Icon name="carbon:close" size="20" />
+            </button>
+        </div>
+
         <!-- Loading State -->
         <div v-if="boardStore.isLoading && !boardStore.board.length" class="loading-state">
             <Icon name="carbon:renew" size="48" class="spinning" />
@@ -58,6 +75,22 @@ definePageMeta({
 
 const route = useRoute();
 const boardStore = useBoardStore();
+const showInvitedMessage = ref(false);
+
+onMounted(() => {
+    if (route.query.invited) {
+        showInvitedMessage.value = true;
+        // Clean up query param
+        const query = { ...route.query };
+        delete query.invited;
+        useRouter().replace({ query });
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            showInvitedMessage.value = false;
+        }, 5000);
+    }
+});
 
 await boardStore.getBoard(route);
 
