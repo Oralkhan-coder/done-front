@@ -504,7 +504,7 @@ const handleSubmit = async () => {
 
         const response = await taskStore.updateTask(props.task.id, requestBody);
 
-        console.log('Task update response:', response);
+        console.log('Task update ok');
 
         const oldStatusId = props.task.statusId;
         const newStatusId = formData.statusId;
