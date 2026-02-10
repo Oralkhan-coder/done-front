@@ -39,7 +39,6 @@ const props = defineProps({
         required: true,
     },
 });
-const emit = defineEmits(['add-task', 'task-click', 'task-drop']);
 const boardStore = useBoardStore();
 const route = useRoute();
 const isDragOver = ref(false);
@@ -57,17 +56,7 @@ const handleTaskClick = (task) => {
     boardStore.openUpdateModal(task);
 };
 
-const handleTaskCreated = (newTask) => {
-    console.log('Received task from CreateCard:', newTask);
-
-    const column = boardStore.board.find((col) => col.statusId === props.column.statusId);
-    if (column) {
-        if (!column.tasks) column.tasks = [];
-
-        column.tasks.unshift(newTask);
-
-        console.log('Task added to column:', newTask);
-    }
+const handleTaskCreated = () => {
     showInlineCreate.value = false;
 };
 
@@ -102,18 +91,41 @@ const handleDragOver = (event) => {
 const handleDragLeave = () => {
     isDragOver.value = false;
 };
+
+const getDropIndex = (event) => {
+    const taskElements = [...event.currentTarget.querySelectorAll('[data-task-id]')];
+    if (!taskElements.length) return 0;
+
+    const pointerY = event.clientY;
+    for (let index = 0; index < taskElements.length; index += 1) {
+        const rect = taskElements[index].getBoundingClientRect();
+        const middleY = rect.top + rect.height / 2;
+
+        if (pointerY < middleY) {
+            return index;
+        }
+    }
+
+    return taskElements.length;
+};
+
 const handleDrop = async (event) => {
     event.preventDefault();
     isDragOver.value = false;
-    const taskId = parseInt(event.dataTransfer.getData('taskId'));
-    const fromStatusId = parseInt(event.dataTransfer.getData('statusId'));
-    const toStatusId = props.column.statusId;
-    if (taskId && fromStatusId && toStatusId && fromStatusId !== toStatusId) {
-        try {
-            await boardStore.moveTask(route.params.id, taskId, fromStatusId, toStatusId);
-        } catch (error) {
-            console.error('Failed to move task:', error);
-        }
+
+    const taskId = Number.parseInt(event.dataTransfer.getData('taskId'), 10);
+    const fromStatusId = Number.parseInt(event.dataTransfer.getData('statusId'), 10);
+    const toStatusId = Number(props.column.statusId);
+
+    if (Number.isNaN(taskId) || Number.isNaN(fromStatusId) || Number.isNaN(toStatusId)) {
+        return;
+    }
+
+    try {
+        const dropIndex = getDropIndex(event);
+        await boardStore.moveTask(route.params.id, taskId, fromStatusId, toStatusId, dropIndex);
+    } catch (error) {
+        console.error('Failed to move task:', error);
     }
 };
 </script>
