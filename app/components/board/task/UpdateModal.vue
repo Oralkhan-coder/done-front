@@ -59,45 +59,29 @@
                                 <InputNumber id="task-story-point" v-model="formData.storyPoint"
                                     placeholder="Enter story points" class="w-full" :min="0" />
                             </div>
-                            <div class="history-section">
-                                <div class="history-header">
-                                    <label class="form-label">History</label>
-                                    <button class="history-refresh" type="button" @click="refreshHistory">
-                                        <Icon name="carbon:renew" size="14" />
-                                        <span>Refresh</span>
+                            <div class="task-activity-section">
+                                <div class="task-tabs">
+                                    <button
+                                        type="button"
+                                        class="task-tab-btn"
+                                        :class="{ active: activeTab === 'comment' }"
+                                        @click="activeTab = 'comment'"
+                                    >
+                                        Comment
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="task-tab-btn"
+                                        :class="{ active: activeTab === 'history' }"
+                                        @click="activeTab = 'history'"
+                                    >
+                                        History
                                     </button>
                                 </div>
-                                <div v-if="historyLoading" class="history-state">
-                                    <Icon name="carbon:renew" size="18" class="spinning" />
-                                    <span>Loading history...</span>
+                                <div class="task-tab-panel">
+                                    <TaskComments v-if="activeTab === 'comment'" :task-id="task.id" />
+                                    <TaskHistory v-else :task-id="task.id" />
                                 </div>
-                                <div v-else-if="historyError" class="history-state error">
-                                    <Icon name="carbon:warning" size="16" />
-                                    <span>{{ historyError }}</span>
-                                </div>
-                                <div v-else-if="historyItems.length === 0" class="history-empty">
-                                    No history yet.
-                                </div>
-                                <ul v-else class="history-list">
-                                    <li v-for="(entry, index) in historyItems" :key="getHistoryKey(entry, index)"
-                                        class="history-item">
-                                        <div class="history-dot"></div>
-                                        <div class="history-content">
-                                            <div class="history-line">
-                                                <span class="history-message">{{ getHistoryMessage(entry, index)
-                                                    }}</span>
-                                            </div>
-                                            <div class="history-meta">
-                                                <span v-if="getHistoryActor(entry)" class="history-actor">
-                                                    {{ getHistoryActor(entry) }}
-                                                </span>
-                                                <span v-if="getHistoryDate(entry)">
-                                                    {{ formatRelativeTime(getHistoryDate(entry)) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
                             </div>
                             <div class="modal-actions">
                                 <Button label="Cancel" severity="secondary" outlined @click="handleClose"
@@ -113,6 +97,9 @@
     </Teleport>
 </template>
 <script setup>
+import TaskComments from './TaskComments.vue';
+import TaskHistory from './TaskHistory.vue';
+
 const props = defineProps({
     isOpen: {
         type: Boolean,
@@ -148,9 +135,7 @@ const errors = reactive({
 
 const isSubmitting = ref(false);
 const isLoadingTask = ref(false);
-const historyItems = ref([]);
-const historyLoading = ref(false);
-const historyError = ref('');
+const activeTab = ref('comment');
 
 const priorities = [
     { label: 'Low', value: 'low' },
@@ -190,248 +175,6 @@ const validateForm = () => {
         return false;
     }
     return true;
-};
-
-const formatDate = (date) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
-
-const formatRelativeTime = (date) => {
-    if (!date) return '';
-    const now = new Date();
-    const past = new Date(date);
-    const diffMs = now - past;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'today';
-    if (diffDays === 1) return 'yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return formatDate(date);
-};
-
-const formatHistoryValue = (value) => {
-    if (value === null || value === undefined || value === '') return 'empty';
-    if (typeof value === 'object') {
-        if (value.name) return value.name;
-        if (value.title) return value.title;
-        if (value.label) return value.label;
-        if (value.id) return `#${value.id}`;
-        try {
-            return JSON.stringify(value);
-        } catch (error) {
-            return 'updated';
-        }
-    }
-    return String(value);
-};
-const formatHistoryValueForField = (field, value) => {
-    if (field === 'status_id' || field === 'statusId') {
-        const numeric = Number(value);
-        if (!Number.isNaN(numeric)) {
-            if (numeric === 0) return 'To Do';
-            const status = statusStore.getStatusById(numeric);
-            if (status?.title) return status.title;
-            const map = {
-                1: 'To Do',
-                2: 'In Progress',
-                3: 'Done',
-            };
-            if (map[numeric]) return map[numeric];
-        }
-        return value === null || value === undefined || value === '' || value === '0' ? 'empty' : String(value);
-    }
-    if (field === 'sprint_id' || field === 'sprintId') {
-        const numeric = Number(value);
-        if (Number.isNaN(numeric) || numeric <= 0) {
-            return 'Backlog';
-        }
-
-        const sprint = sprintStore.sprints.find((item) => item.id === numeric);
-        if (sprint?.number) {
-            return `Sprint #${sprint.number}`;
-        }
-
-        return `Sprint #${numeric}`;
-    }
-    return formatHistoryValue(value);
-};
-
-const getHistoryActor = (entry) => {
-    if (entry?.actorId) {
-        const user = projectUsersStore.getUserById(entry.actorId);
-        if (user?.name) return user.name;
-        return `User #${entry.actorId}`;
-    }
-    return (
-        entry?.user?.name ||
-        entry?.actor?.name ||
-        entry?.changedBy?.name ||
-        entry?.author?.name ||
-        entry?.by ||
-        ''
-    );
-};
-
-const getHistoryDate = (entry) => {
-    return entry?.createdAt || entry?.timestamp || entry?.date || entry?.updatedAt || '';
-};
-
-const humanizeField = (field) => {
-    if (!field) return '';
-    const map = {
-        create: 'Task created',
-        delete: 'Task deleted',
-        comment: 'Comment',
-        title: 'Title',
-        description: 'Description',
-        type: 'Type',
-        priority: 'Priority',
-        assignee_id: 'Assignee',
-        assigneeId: 'Assignee',
-        assignee: 'Assignee',
-        status_id: 'Status',
-        statusId: 'Status',
-        sprint_id: 'Sprint',
-        sprintId: 'Sprint',
-        dueDate: 'Due date',
-        story_point: 'Story points',
-        storyPoint: 'Story points',
-    };
-    if (map[field]) return map[field];
-    return field
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/_/g, ' ')
-        .replace(/^\w/, (c) => c.toUpperCase());
-};
-
-const getPreviousStatusValue = (index) => {
-    for (let i = index - 1; i >= 0; i -= 1) {
-        const prev = historyItems.value[i];
-        if (!prev) continue;
-        if (prev.field === 'status_id' || prev.field === 'statusId') {
-            const val = prev.newValue ?? prev.to ?? prev.statusId;
-            if (val !== null && val !== undefined && val !== '') {
-                return val;
-            }
-        }
-    }
-    return null;
-};
-const getHistoryMessage = (entry, index) => {
-    if (!entry) return 'Task updated';
-    if (entry.field === 'create') return 'Task created';
-    if (entry.field === 'delete') return 'Task deleted';
-    if (entry.field === 'comment') return 'Comment updated';
-    if (entry.field) {
-        const fieldLabel = humanizeField(entry.field);
-        const hasOld = entry.oldValue !== null && entry.oldValue !== undefined && entry.oldValue !== '';
-        const hasNew = entry.newValue !== null && entry.newValue !== undefined && entry.newValue !== '';
-        if (
-            (entry.field === 'status_id' || entry.field === 'statusId') &&
-            (!hasOld || entry.oldValue === '0') &&
-            hasNew
-        ) {
-            const inferredOld = getPreviousStatusValue(index);
-            if (inferredOld !== null) {
-                return `${fieldLabel} changed from ${formatHistoryValueForField(
-                    entry.field,
-                    inferredOld,
-                )} to ${formatHistoryValueForField(entry.field, entry.newValue)}`;
-            }
-        }
-        if (!hasOld && hasNew) {
-            return `${fieldLabel} set to ${formatHistoryValueForField(entry.field, entry.newValue)}`;
-        }
-        if (hasOld && !hasNew) {
-            return `${fieldLabel} cleared`;
-        }
-        if (hasOld || hasNew) {
-            return `${fieldLabel} changed from ${formatHistoryValueForField(
-                entry.field,
-                entry.oldValue,
-            )} to ${formatHistoryValueForField(entry.field, entry.newValue)}`;
-        }
-        return `${fieldLabel} updated`;
-    }
-    if (entry.message) return entry.message;
-    if (entry.description) return entry.description;
-    if (entry.event) return entry.event;
-    if (Array.isArray(entry.changes) && entry.changes.length > 0) {
-        const parts = entry.changes.slice(0, 2).map((change) => {
-            const field = humanizeField(change.field || change.key || change.name || '');
-            if ('from' in change || 'to' in change) {
-                return `${field} changed from ${formatHistoryValue(change.from)} to ${formatHistoryValue(
-                    change.to,
-                )}`;
-            }
-            return field ? `${field} updated` : 'Task updated';
-        });
-        return parts.join(' - ');
-    }
-    if (entry.field && ('from' in entry || 'to' in entry)) {
-        return `${humanizeField(entry.field)} changed from ${formatHistoryValue(entry.from)} to ${formatHistoryValue(
-            entry.to,
-        )}`;
-    }
-    if (entry.action && entry.field) return `${humanizeField(entry.field)} ${entry.action}`;
-    if (entry.action) return entry.action;
-    return 'Task updated';
-};
-
-const getHistoryKey = (entry, index) => {
-    return entry?.id || entry?._id || entry?.historyId || entry?.createdAt || entry?.timestamp || index;
-};
-
-const ensureStatusesLoaded = async () => {
-    if (!route.params.id) return;
-    if (statusStore.isLoading) return;
-    if (statusStore.statuses.length > 0) return;
-    try {
-        await statusStore.fetchStatuses(route.params.id);
-    } catch (error) {
-
-    }
-};
-
-const ensureSprintsLoaded = async () => {
-    if (!route.params.id) return;
-    if (sprintStore.isLoading) return;
-
-    const projectId = Number(route.params.id);
-    if (sprintStore.currentProjectId === projectId && sprintStore.sprints.length > 0) return;
-
-    try {
-        await sprintStore.fetchProjectSprints(projectId);
-    } catch (error) {
-        // Sprint loading errors are surfaced through sprintStore.error on sprint screens.
-    }
-};
-
-const fetchHistory = async () => {
-    if (!props.task?.id) return;
-    await Promise.all([ensureStatusesLoaded(), ensureSprintsLoaded()]);
-    historyLoading.value = true;
-    historyError.value = '';
-    try {
-        const response = await taskStore.getTaskHistory(props.task.id);
-        const items = Array.isArray(response)
-            ? response
-            : response?.items || response?.data || response?.history || [];
-        historyItems.value = Array.isArray(items) ? items : [];
-    } catch (error) {
-        historyError.value = taskStore.historyError || 'Failed to load history';
-    } finally {
-        historyLoading.value = false;
-    }
-};
-
-const refreshHistory = async () => {
-    await fetchHistory();
 };
 
 const loadFormData = async () => {
@@ -477,6 +220,7 @@ const resetForm = () => {
 };
 
 const handleClose = () => {
+    activeTab.value = 'comment';
     resetForm();
     boardStore.closeModals();
 };
@@ -502,9 +246,7 @@ const handleSubmit = async () => {
             requestBody.storyPoint = formData.storyPoint;
         }
 
-        const response = await taskStore.updateTask(props.task.id, requestBody);
-
-        console.log('Task update ok');
+        await taskStore.updateTask(props.task.id, requestBody);
 
         const oldStatusId = props.task.statusId;
         const newStatusId = formData.statusId;
@@ -579,10 +321,12 @@ watch(
             }
 
             if (isJustOpened || isTaskChanged) {
-                await Promise.all([loadFormData(), fetchHistory()]);
+                activeTab.value = 'comment';
+                await loadFormData();
             }
         } else {
             if (oldIsOpen) {
+                activeTab.value = 'comment';
                 resetForm();
             }
         }
@@ -697,118 +441,48 @@ watch(
     border-top: 1px solid var(--surface-200);
 }
 
-.history-section {
-    margin-top: 12px;
-    padding-top: 8px;
-    border-top: 1px solid var(--surface-200);
+.task-activity-section {
+    margin-top: 8px;
+    border: 1px solid var(--surface-200);
+    border-radius: 12px;
+    background: var(--surface-0);
 }
 
-.history-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.history-refresh {
+.task-tabs {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--surface-600);
-    border: 1px solid var(--surface-200);
+    border-bottom: 1px solid var(--surface-200);
+    width: 100%;
+    padding: 10px 12px 0 12px;
+    gap: 8px;
+}
+
+.task-tab-btn {
+    border: 1px solid #2563eb;
+    border-bottom: none;
     background: white;
-    border-radius: 999px;
-    padding: 4px 10px;
+    color: #2563eb;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.history-refresh:hover {
-    color: var(--surface-900);
-    border-color: var(--surface-300);
-    background: var(--surface-50);
+.task-tab-btn:hover {
+    background: #eff6ff;
 }
 
-.history-state {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--surface-500);
-    padding: 12px;
-    border: 1px dashed var(--surface-200);
-    border-radius: 8px;
+.task-tab-btn.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.45);
 }
 
-.history-state.error {
-    color: #dc2626;
-    border-color: #fecaca;
-    background: #fef2f2;
-}
-
-.history-empty {
-    font-size: 13px;
-    color: var(--surface-400);
-    padding: 12px;
-    border: 1px dashed var(--surface-200);
-    border-radius: 8px;
-}
-
-.history-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.history-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.history-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--primary-400);
-    margin-top: 6px;
-    flex-shrink: 0;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-}
-
-.history-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 12px;
-    border: 1px solid var(--surface-200);
-    border-radius: 10px;
-    background: white;
-}
-
-.history-message {
-    font-size: 13px;
-    color: var(--surface-800);
-    font-weight: 600;
-}
-
-.history-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--surface-500);
-}
-
-.history-actor {
-    font-weight: 600;
-    color: var(--surface-700);
+.task-tab-panel {
+    padding: 14px 12px 12px 12px;
 }
 
 .modal-enter-active,
