@@ -48,10 +48,16 @@
                                         class="w-full" :loading="loadingMembers" />
                                 </div>
                                 <div class="form-group">
-                                    <label for="task-story-point" class="form-label">Story Points</label>
-                                    <InputNumber id="task-story-point" v-model="formData.storyPoint"
-                                        placeholder="Enter story points" class="w-full" :min="0" />
+                                    <label for="task-sprint" class="form-label">Sprint</label>
+                                    <Select id="task-sprint" v-model="formData.sprintId" :options="sprintOptions"
+                                        optionLabel="label" optionValue="value" placeholder="Select sprint"
+                                        class="w-full" :loading="loadingSprints" />
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="task-story-point" class="form-label">Story Points</label>
+                                <InputNumber id="task-story-point" v-model="formData.storyPoint"
+                                    placeholder="Enter story points" class="w-full" :min="0" />
                             </div>
                             <div class="history-section">
                                 <div class="history-header">
@@ -122,6 +128,7 @@ const route = useRoute();
 const boardStore = useBoardStore();
 const projectUsersStore = useProjectUsersStore();
 const statusStore = useStatusStore();
+const sprintStore = useSprintStore();
 const taskStore = useTaskStore();
 
 const formData = reactive({
@@ -132,6 +139,7 @@ const formData = reactive({
     priority: 'medium',
     assigneeId: null,
     storyPoint: null,
+    sprintId: 0,
 });
 
 const errors = reactive({
@@ -165,6 +173,14 @@ const projectMembers = computed(() => {
 
 const loadingMembers = computed(() => {
     return projectUsersStore.isLoading;
+});
+
+const sprintOptions = computed(() => {
+    return [{ label: 'Backlog (No Sprint)', value: 0 }, ...sprintStore.sprintOptions];
+});
+
+const loadingSprints = computed(() => {
+    return sprintStore.isLoading;
 });
 
 const validateForm = () => {
@@ -229,6 +245,19 @@ const formatHistoryValueForField = (field, value) => {
         }
         return value === null || value === undefined || value === '' || value === '0' ? 'empty' : String(value);
     }
+    if (field === 'sprint_id' || field === 'sprintId') {
+        const numeric = Number(value);
+        if (Number.isNaN(numeric) || numeric <= 0) {
+            return 'Backlog';
+        }
+
+        const sprint = sprintStore.sprints.find((item) => item.id === numeric);
+        if (sprint?.number) {
+            return `Sprint #${sprint.number}`;
+        }
+
+        return `Sprint #${numeric}`;
+    }
     return formatHistoryValue(value);
 };
 
@@ -267,6 +296,8 @@ const humanizeField = (field) => {
         assignee: 'Assignee',
         status_id: 'Status',
         statusId: 'Status',
+        sprint_id: 'Sprint',
+        sprintId: 'Sprint',
         dueDate: 'Due date',
         story_point: 'Story points',
         storyPoint: 'Story points',
@@ -367,9 +398,23 @@ const ensureStatusesLoaded = async () => {
     }
 };
 
+const ensureSprintsLoaded = async () => {
+    if (!route.params.id) return;
+    if (sprintStore.isLoading) return;
+
+    const projectId = Number(route.params.id);
+    if (sprintStore.currentProjectId === projectId && sprintStore.sprints.length > 0) return;
+
+    try {
+        await sprintStore.fetchProjectSprints(projectId);
+    } catch (error) {
+        // Sprint loading errors are surfaced through sprintStore.error on sprint screens.
+    }
+};
+
 const fetchHistory = async () => {
     if (!props.task?.id) return;
-    await ensureStatusesLoaded();
+    await Promise.all([ensureStatusesLoaded(), ensureSprintsLoaded()]);
     historyLoading.value = true;
     historyError.value = '';
     try {
@@ -402,6 +447,7 @@ const loadFormData = async () => {
             formData.priority = taskDetails.priority || 'medium';
             formData.assigneeId = taskDetails.assigneeId || null;
             formData.storyPoint = taskDetails.storyPoint || null;
+            formData.sprintId = taskDetails.sprintId || 0;
         } catch (error) {
             console.error('Failed to load task details:', error);
             formData.taskCode = props.task.code || '';
@@ -411,6 +457,7 @@ const loadFormData = async () => {
             formData.priority = props.task.priority || 'medium';
             formData.assigneeId = props.task.assignee?.userId || props.task.assigneeId || null;
             formData.storyPoint = props.task.storyPoint || null;
+            formData.sprintId = props.task.sprintId || 0;
         } finally {
             isLoadingTask.value = false;
         }
@@ -425,6 +472,7 @@ const resetForm = () => {
     formData.priority = 'medium';
     formData.assigneeId = null;
     formData.storyPoint = null;
+    formData.sprintId = 0;
     errors.title = '';
 };
 
@@ -438,11 +486,13 @@ const handleSubmit = async () => {
 
     isSubmitting.value = true;
     try {
+        const normalizedSprintId = Number(formData.sprintId) > 0 ? Number(formData.sprintId) : 0;
         const requestBody = {
             title: formData.title,
             description: formData.description || '',
             statusId: formData.statusId,
             priority: formData.priority,
+            sprintId: normalizedSprintId,
         };
 
         if (formData.assigneeId !== null && formData.assigneeId !== undefined) {
@@ -474,6 +524,7 @@ const handleSubmit = async () => {
                     toColumn.tasks.push({
                         ...task,
                         ...requestBody,
+                        sprintId: normalizedSprintId || null,
                         assignee: formData.assigneeId
                             ? projectUsersStore.getUserById(formData.assigneeId)
                             : null,
@@ -488,6 +539,7 @@ const handleSubmit = async () => {
                         column.tasks[taskIndex] = {
                             ...column.tasks[taskIndex],
                             ...requestBody,
+                            sprintId: normalizedSprintId || null,
                             assignee: formData.assigneeId
                                 ? projectUsersStore.getUserById(formData.assigneeId)
                                 : null,
@@ -508,20 +560,26 @@ const handleSubmit = async () => {
 
 watch(
     [() => props.isOpen, () => props.task],
-    ([newIsOpen, newTask], [oldIsOpen, oldTask]) => {
+    async ([newIsOpen, newTask], [oldIsOpen, oldTask]) => {
         if (newIsOpen) {
 
             const isJustOpened = !oldIsOpen;
             const isTaskChanged = newTask?.id !== oldTask?.id;
 
             if (isJustOpened && route.params.id) {
-                projectUsersStore.fetchProjectUsers(route.params.id);
-                statusStore.fetchStatuses(route.params.id);
+                try {
+                    await Promise.all([
+                        projectUsersStore.fetchProjectUsers(route.params.id),
+                        statusStore.fetchStatuses(route.params.id),
+                        sprintStore.fetchProjectSprints(route.params.id),
+                    ]);
+                } catch (error) {
+                    // Keep modal usable even if some side data fails to load.
+                }
             }
 
             if (isJustOpened || isTaskChanged) {
-                loadFormData();
-                fetchHistory();
+                await Promise.all([loadFormData(), fetchHistory()]);
             }
         } else {
             if (oldIsOpen) {

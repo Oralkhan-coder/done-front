@@ -40,6 +40,12 @@
                                 optionLabel="label" optionValue="value" placeholder="Select assignee" class="w-full"
                                 :loading="loadingMembers" />
                         </div>
+                        <div class="form-group">
+                            <label for="task-sprint" class="form-label">Sprint</label>
+                            <Select id="task-sprint" v-model="formData.sprintId" :options="sprintOptions"
+                                optionLabel="label" optionValue="value" placeholder="Select sprint" class="w-full"
+                                :loading="loadingSprints" />
+                        </div>
                         <div class="modal-actions">
                             <Button label="Cancel" severity="secondary" outlined @click="handleClose" type="button" />
                             <Button label="Create Task" icon="carbon:add" :loading="isSubmitting" type="submit"
@@ -66,6 +72,7 @@ const emit = defineEmits(['close', 'submit']);
 const route = useRoute();
 const boardStore = useBoardStore();
 const projectUsersStore = useProjectUsersStore();
+const sprintStore = useSprintStore();
 
 const formData = reactive({
     title: '',
@@ -73,6 +80,7 @@ const formData = reactive({
     priority: 'medium',
     assigneeId: null,
     storyPoint: null,
+    sprintId: 0,
 });
 
 const errors = reactive({
@@ -96,6 +104,14 @@ const loadingMembers = computed(() => {
     return projectUsersStore.isLoading;
 });
 
+const sprintOptions = computed(() => {
+    return [{ label: 'Backlog (No Sprint)', value: 0 }, ...sprintStore.sprintOptions];
+});
+
+const loadingSprints = computed(() => {
+    return sprintStore.isLoading;
+});
+
 const validateForm = () => {
     errors.title = '';
     if (!formData.title.trim()) {
@@ -111,6 +127,7 @@ const resetForm = () => {
     formData.priority = 'medium';
     formData.assigneeId = null;
     formData.storyPoint = null;
+    formData.sprintId = sprintStore.activeSprint?.id || 0;
     errors.title = '';
 };
 
@@ -141,6 +158,10 @@ const handleSubmit = async () => {
         if (formData.storyPoint !== null && formData.storyPoint !== undefined) {
             requestBody.storyPoint = formData.storyPoint;
         }
+        const selectedSprintId = Number(formData.sprintId);
+        if (selectedSprintId > 0) {
+            requestBody.sprintId = selectedSprintId;
+        }
 
         await boardStore.createTask(route.params.id, props.statusId, requestBody);
 
@@ -155,10 +176,21 @@ const handleSubmit = async () => {
 
 watch(
     () => props.isOpen,
-    (newVal) => {
+    async (newVal) => {
         if (newVal) {
             if (route.params.id) {
-                projectUsersStore.fetchProjectUsers(route.params.id);
+                try {
+                    await Promise.all([
+                        projectUsersStore.fetchProjectUsers(route.params.id),
+                        sprintStore.fetchProjectSprints(route.params.id),
+                    ]);
+                } catch (error) {
+                    // Keep create form usable even when secondary data fails to load.
+                }
+
+                if (!formData.sprintId && sprintStore.activeSprint?.id) {
+                    formData.sprintId = sprintStore.activeSprint.id;
+                }
             }
         } else {
             resetForm();

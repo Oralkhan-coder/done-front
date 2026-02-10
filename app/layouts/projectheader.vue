@@ -52,6 +52,11 @@ const tabs = computed(() => [
         icon: 'carbon:grid',
     },
     {
+        name: 'Sprints',
+        path: `/projects/${route.params.id}/sprints`,
+        icon: 'carbon:timer',
+    },
+    {
         name: 'Wiki',
         path: `/projects/${route.params.id}/wiki`,
         icon: 'carbon:notebook',
