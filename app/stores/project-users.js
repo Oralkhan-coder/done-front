@@ -59,7 +59,12 @@ export const useProjectUsersStore = defineStore('project-users', () => {
     };
 
     const getUserById = (userId) => {
-        return projectUsers.value.find((user) => user.userId === userId);
+        if (userId === null || userId === undefined || userId === '') {
+            return undefined;
+        }
+
+        const normalizedUserId = String(userId);
+        return projectUsers.value.find((user) => String(user.userId) === normalizedUserId);
     };
 
     const getUserInitials = (userId) => {
