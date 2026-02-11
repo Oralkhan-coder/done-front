@@ -5,13 +5,14 @@
                 <h1 class="text-2xl font-bold text-slate-900">Create New Project</h1>
                 <p class="text-slate-500 mt-1">Fill in the details below to create a new project workspace.</p>
             </div>
-            <form class="space-y-6" @submit.prevent="projectStore.createProject(project)">
+            <form class="space-y-6" @submit.prevent="handleCreateProject">
                 <div class="grid gap-6">
                     <div class="space-y-1.5">
                         <label for="title" class="block text-sm font-medium text-slate-700">Project Title</label>
                         <InputText
                             id="title"
                             v-model="project.title"
+                            required
                             class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500"
                             placeholder="e.g. Website Redesign"
                         />
@@ -21,6 +22,7 @@
                         <InputText
                             id="code"
                             v-model="project.code"
+                            required
                             class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500 uppercase"
                             placeholder="e.g. WEB-01"
                         />
@@ -31,6 +33,7 @@
                         <Textarea
                             id="description"
                             v-model="project.description"
+                            required
                             rows="5"
                             class="w-full !rounded-lg !border-slate-300 focus:!border-indigo-500 focus:!ring-indigo-500"
                             placeholder="Describe the goals and scope of this project..."
@@ -38,15 +41,17 @@
                         />
                     </div>
                 </div>
+                <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
                 <div class="flex items-center gap-4 pt-4 border-t border-slate-100">
                     <NuxtLink :to="{ name: 'projects' }" class="flex-1">
                         <Button label="Cancel" severity="secondary" outlined class="w-full" />
                     </NuxtLink>
                     <Button
                         type="submit"
-                        label="Create Project"
+                        :label="isSubmitting ? 'Creating...' : 'Create Project'"
                         icon="carbon:arrow-right"
                         iconPos="right"
+                        :disabled="isSubmitting"
                         class="flex-1 bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700"
                     />
                 </div>
@@ -56,9 +61,35 @@
 </template>
 <script setup>
 const projectStore = useProjectStore();
+const isSubmitting = ref(false);
+const createError = ref('');
 const project = reactive({
     title: '',
     code: '',
     description: '',
 });
+
+const handleCreateProject = async () => {
+    createError.value = '';
+
+    const payload = {
+        title: (project.title || '').trim(),
+        code: (project.code || '').trim().toUpperCase(),
+        description: (project.description || '').trim(),
+    };
+
+    if (!payload.title || !payload.code || !payload.description) {
+        createError.value = 'Fill in title, code and description.';
+        return;
+    }
+
+    isSubmitting.value = true;
+    try {
+        await projectStore.createProject(payload);
+    } catch (error) {
+        createError.value = error?.data?.message || error?.message || 'Failed to create project.';
+    } finally {
+        isSubmitting.value = false;
+    }
+};
 </script>
