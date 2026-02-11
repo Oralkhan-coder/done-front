@@ -50,7 +50,7 @@ onMounted(async () => {
 
         localStorage.setItem('inviteToken', token);
 
-        const response = await $fetch(`http://localhost:3000/invitation/validate`, {
+        const response = await $fetch(`http://localhost:8080/invitation/validate`, {
             params: { token }
         });
 

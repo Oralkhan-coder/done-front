@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
     const registrationEmail = ref('');
     const isAuthenticated = computed(() => !!accessToken.value);
     const login = async (credentials) => {
-        const data = await $fetch('http://localhost:3000/login', {
+        const data = await $fetch('http://localhost:8080/login', {
             method: 'POST',
             body: credentials,
         });
@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
     const register = async (registrationData) => {
         try {
-            const response = await $fetch('http://localhost:3000/signup', {
+            const response = await $fetch('http://localhost:8080/signup', {
                 method: 'POST',
                 body: {
                     email: registrationData.email,
@@ -44,13 +44,26 @@ export const useAuthStore = defineStore('auth', () => {
             throw new Error('Network error. Please try again.');
         }
     };
+
+    const googleLogin = async (token) => {
+        try {
+            const response = await $fetch('http://localhost:8080/google/auth', {
+                method: 'POST',
+                body: { token },
+            });
+            accessToken.value = response.accessToken;
+            return navigateTo('/');
+        } catch (error) {
+            throw new Error(error.response?._data?.message || 'Google login failed');
+        }
+    };
     const verifyOtp = async (code, inviteToken = null) => {
         try {
             const query = {};
             if (inviteToken) {
                 query.inviteToken = inviteToken;
             }
-            const response = await $fetch('http://localhost:3000/otp/check', {
+            const response = await $fetch('http://localhost:8080/otp/check', {
                 method: 'POST',
                 body: {
                     email: registrationEmail.value,
@@ -69,7 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
     const resendOtp = async () => {
         try {
-            const response = await $fetch('http://localhost:3000/otp/generate', {
+            const response = await $fetch('http://localhost:8080/otp/generate', {
                 method: 'POST',
                 body: {
                     email: registrationEmail.value,
@@ -97,5 +110,6 @@ export const useAuthStore = defineStore('auth', () => {
         verifyOtp,
         resendOtp,
         clearRegistrationEmail,
+        googleLogin,
     };
 });
