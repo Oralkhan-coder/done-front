@@ -54,11 +54,6 @@
             </table>
         </div>
 
-        <button type="button" class="add-issue-btn" @click="openCreateModal">
-            <Icon name="carbon:add" size="20" />
-            <span>Backlog Issue</span>
-        </button>
-
         <Dialog v-model:visible="showCreateModal" modal header="Create Backlog Issue" :style="{ width: '36rem' }">
             <form class="create-form" @submit.prevent="handleCreateTask">
                 <div class="field">
@@ -485,20 +480,6 @@ await fetchBacklog();
     padding: 24px !important;
 }
 
-.add-issue-btn {
-    width: fit-content;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-    background: transparent;
-    color: #0f62fe;
-    font-size: 32px;
-    font-weight: 600;
-    padding: 0;
-    cursor: pointer;
-}
-
 .state {
     display: flex;
     align-items: center;
@@ -586,9 +567,6 @@ await fetchBacklog();
         white-space: nowrap;
     }
 
-    .add-issue-btn {
-        font-size: 24px;
-    }
 }
 
 @media (max-width: 640px) {
