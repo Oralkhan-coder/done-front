@@ -178,13 +178,23 @@ const getStatusTitle = (statusId) => {
 };
 
 const getAssigneeTitle = (task) => {
-    const assigneeId = Number(task.assigneeId);
+    const directName =
+        task?.assigneeName ||
+        task?.assignee?.name ||
+        task?.assignee?.fullName ||
+        task?.assignee?.email ||
+        '';
+    if (typeof directName === 'string' && directName.trim()) {
+        return directName.trim();
+    }
+
+    const assigneeId = task?.assigneeId;
     if (!assigneeId) {
         return 'unassigned';
     }
 
     const user = projectUsersStore.getUserById(assigneeId);
-    return user?.name || `User #${assigneeId}`;
+    return user?.name || `User #${String(assigneeId)}`;
 };
 
 const resolveType = (task) => {
@@ -202,6 +212,54 @@ const toTaskArray = (response) => {
     return [];
 };
 
+const toHistoryArray = (response) => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.items)) return response.items;
+    if (Array.isArray(response?.history)) return response.history;
+    return [];
+};
+
+const parsePositiveInt = (value) => {
+    const numeric = Number(value);
+    if (!Number.isInteger(numeric) || numeric <= 0) {
+        return null;
+    }
+    return numeric;
+};
+
+const resolveAssigneeIdFromHistory = async (taskId) => {
+    try {
+        const response = await $api(`/tasks/${taskId}/history`);
+        const history = toHistoryArray(response);
+        if (history.length === 0) {
+            return null;
+        }
+
+        const sorted = [...history].sort((a, b) => {
+            const aTime = new Date(a?.createdAt || a?.updatedAt || 0).getTime();
+            const bTime = new Date(b?.createdAt || b?.updatedAt || 0).getTime();
+            return bTime - aTime;
+        });
+
+        for (const entry of sorted) {
+            const fieldName = entry?.field;
+            if (fieldName !== 'assignee_id' && fieldName !== 'assigneeId' && fieldName !== 'assignee') {
+                continue;
+            }
+
+            const fromNewValue = parsePositiveInt(entry?.newValue);
+            if (fromNewValue) {
+                return fromNewValue;
+            }
+        }
+    } catch (error) {
+        return null;
+    }
+
+    return null;
+};
+
 const normalizeTask = (task) => ({
     id: task?.id,
     code: task?.code || '',
@@ -210,6 +268,7 @@ const normalizeTask = (task) => ({
     storyPoint: task?.storyPoint || 0,
     createdAt: task?.createdAt || '',
     assigneeId: task?.assigneeId || task?.assignee?.id || task?.assignee?.userId || null,
+    assigneeName: task?.assignee?.name || task?.assigneeName || '',
     type: task?.type || '',
     sprintId: task?.sprintId || task?.sprintID || null,
 });
@@ -250,6 +309,31 @@ const fetchBacklog = async () => {
 
         const allTasks = toTaskArray(tasksResult.value).map(normalizeTask);
         const backlogTasks = allTasks.filter((task) => !task.sprintId || Number(task.sprintId) === 0);
+
+        const missingAssigneeTasks = backlogTasks.filter((task) => !task.assigneeId && task.id);
+        if (missingAssigneeTasks.length > 0) {
+            const assigneeResults = await Promise.allSettled(
+                missingAssigneeTasks.map(async (task) => ({
+                    taskId: task.id,
+                    assigneeId: await resolveAssigneeIdFromHistory(task.id),
+                })),
+            );
+
+            const resolvedAssigneeMap = new Map();
+            assigneeResults
+                .filter((result) => result.status === 'fulfilled')
+                .forEach((result) => {
+                    if (result.value.assigneeId) {
+                        resolvedAssigneeMap.set(result.value.taskId, result.value.assigneeId);
+                    }
+                });
+
+            backlogTasks.forEach((task) => {
+                if (!task.assigneeId && resolvedAssigneeMap.has(task.id)) {
+                    task.assigneeId = resolvedAssigneeMap.get(task.id);
+                }
+            });
+        }
 
         backlogTasks.sort((a, b) => {
             const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
