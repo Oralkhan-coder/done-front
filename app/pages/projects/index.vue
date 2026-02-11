@@ -34,7 +34,7 @@
                         </template>
                         <template #body="slotProps">
                             <NuxtLink
-                                :to="{ name: 'projects-id-profile', params: { id: slotProps.data.id } }"
+                                :to="`/projects/${slotProps.data.id}/boards`"
                                 class="group flex items-center gap-3"
                             >
                                 <div
