@@ -84,6 +84,7 @@ const emit = defineEmits(['submit', 'cancel']);
 const route = useRoute();
 const boardStore = useBoardStore();
 const projectUsersStore = useProjectUsersStore();
+const sprintStore = useSprintStore();
 
 const titleInput = ref(null);
 const assigneePanel = ref(null);
@@ -169,6 +170,9 @@ const handleSubmit = async () => {
         if (formData.assigneeId) {
             taskData.assigneeId = formData.assigneeId;
         }
+        if (sprintStore.activeSprint?.id) {
+            taskData.sprintId = sprintStore.activeSprint.id;
+        }
 
         await boardStore.createTask(route.params.id, props.statusId, taskData);
         emit('submit');
@@ -186,6 +190,7 @@ const handleCancel = () => {
 onMounted(() => {
     if (route.params.id) {
         projectUsersStore.fetchProjectUsers(route.params.id);
+        sprintStore.fetchProjectSprints(route.params.id);
     }
     nextTick(() => {
         titleInput.value?.focus();

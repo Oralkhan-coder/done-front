@@ -102,7 +102,7 @@ export const useBoardStore = defineStore('board', () => {
     const updateTask = async (projectId, taskId, updates) => {
         try {
             const { $api } = useNuxtApp();
-            const res = await $api(`/projects/${projectId}/tasks/${taskId}`, {
+            const res = await $api(`/tasks/${taskId}`, {
                 method: 'PUT',
                 body: updates,
             });
@@ -125,7 +125,7 @@ export const useBoardStore = defineStore('board', () => {
     const deleteTask = async (projectId, taskId) => {
         try {
             const { $api } = useNuxtApp();
-            await $api(`/projects/${projectId}/tasks/${taskId}`, {
+            await $api(`/tasks/${taskId}`, {
                 method: 'DELETE',
             });
             board.value.forEach((column) => {
