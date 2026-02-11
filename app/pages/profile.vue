@@ -1,45 +1,28 @@
 <template>
     <div class="max-w-7xl mx-auto py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6">
-            <aside class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 h-fit">
-                <div class="flex items-center justify-between gap-2">
-                    <h2 class="text-2xl font-bold text-slate-900">Account</h2>
-                    <NuxtLink
-                        to="/"
-                        class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium"
-                    >
-                        <span class="inline-flex items-center gap-1">
-                            <Icon name="carbon:arrow-left" size="14" />
-                            Back
-                        </span>
-                    </NuxtLink>
-                </div>
-
-                <div class="mt-6 border-t border-slate-100 pt-5 space-y-1">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.key"
-                        type="button"
-                        @click="activeTab = tab.key"
-                        :class="[
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left text-base transition-colors',
-                            activeTab === tab.key
-                                ? 'border-slate-200 bg-slate-50 text-slate-900 shadow-sm'
-                                : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                        ]"
-                    >
-                        <Icon :name="tab.icon" size="18" />
-                        <span>{{ tab.label }}</span>
-                    </button>
-                </div>
-            </aside>
-
+        <div>
             <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
                 <div v-if="activeTab === 'profile'" class="space-y-6">
-                    <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-4 flex-wrap">
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-900">Profile</h1>
-                            <p class="text-sm text-slate-500 mt-1">Manage your account information</p>
+                            <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
+                                <button
+                                    type="button"
+                                    :class="tabToggleButtonClass('profile')"
+                                    @click="activeTab = 'profile'"
+                                >
+                                    <Icon name="carbon:user" size="16" />
+                                    Profile
+                                </button>
+                                <button
+                                    type="button"
+                                    :class="tabToggleButtonClass('activity')"
+                                    @click="activeTab = 'activity'"
+                                >
+                                    <Icon name="carbon:activity" size="16" />
+                                    Activity
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -92,20 +75,25 @@
                 </div>
 
                 <div v-else-if="activeTab === 'activity'" class="space-y-4">
-                    <div class="flex items-center justify-between gap-4 flex-wrap">
-                        <div>
-                            <h1 class="text-2xl font-bold text-slate-900">{{ accountName }} activities</h1>
-                            <p class="text-sm text-slate-500 mt-1">Recent actions in projects and issues</p>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
+                            <button
+                                type="button"
+                                :class="tabToggleButtonClass('profile')"
+                                @click="activeTab = 'profile'"
+                            >
+                                <Icon name="carbon:user" size="16" />
+                                Profile
+                            </button>
+                            <button
+                                type="button"
+                                :class="tabToggleButtonClass('activity')"
+                                @click="activeTab = 'activity'"
+                            >
+                                <Icon name="carbon:activity" size="16" />
+                                Activity
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                            @click="fetchUserActivities"
-                            :disabled="activitiesLoading"
-                        >
-                            <Icon :name="activitiesLoading ? 'carbon:renew' : 'carbon:renew'" size="14" :class="{ spinning: activitiesLoading }" />
-                            Refresh
-                        </button>
                     </div>
 
                     <div v-if="activitiesLoading" class="state">
@@ -172,10 +160,7 @@ const form = reactive({
     email: '',
 });
 
-const tabs = [
-    { key: 'profile', label: 'Profile', icon: 'carbon:user' },
-    { key: 'activity', label: 'Activity', icon: 'carbon:activity' },
-];
+const tabs = [{ key: 'profile', label: 'Profile', icon: 'carbon:user' }];
 
 const syncFormWithStore = () => {
     form.fullName = authStore.currentUser?.fullName || '';
@@ -192,6 +177,10 @@ const userAvatar = computed(() => {
 
 const accountName = computed(() => form.fullName || form.email || 'User');
 const currentTabLabel = computed(() => tabs.find((tab) => tab.key === activeTab.value)?.label || 'This');
+const tabToggleButtonClass = (tabKey) => [
+    'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+    activeTab.value === tabKey ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900',
+];
 
 const updateViaEndpoints = async (payload) => {
     const endpoints = ['/users/me', '/profile', '/me'];
