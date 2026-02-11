@@ -142,7 +142,6 @@ const openInviteModal = () => {
 };
 
 const handleInviteSuccess = () => {
-    // Optional: Show success toast/notification
 };
 </script>
 <style scoped>

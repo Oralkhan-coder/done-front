@@ -241,13 +241,8 @@ const fetchBacklog = async () => {
             projectUsersStore.fetchProjectUsers(projectId),
         ]);
 
-        if (statusesResult.status === 'rejected') {
-            // Backlog remains usable with fallback status labels.
-        }
-
-        if (usersResult.status === 'rejected') {
-            // Assignee column falls back to user IDs.
-        }
+        void statusesResult;
+        void usersResult;
 
         if (tasksResult.status !== 'fulfilled') {
             throw tasksResult.reason;

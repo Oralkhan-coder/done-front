@@ -316,7 +316,6 @@ watch(
                         sprintStore.fetchProjectSprints(route.params.id),
                     ]);
                 } catch (error) {
-                    // Keep modal usable even if some side data fails to load.
                 }
             }
 
