@@ -3,28 +3,26 @@
         <div>
             <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
                 <div v-if="activeTab === 'profile'" class="space-y-6">
-                    <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-4 flex-wrap">
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-900">Profile</h1>
-                            <p class="text-sm text-slate-500 mt-1">Manage your account information</p>
-                        </div>
-                        <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
-                            <button
-                                type="button"
-                                :class="tabToggleButtonClass('profile')"
-                                @click="activeTab = 'profile'"
-                            >
-                                <Icon name="carbon:user" size="16" />
-                                Profile
-                            </button>
-                            <button
-                                type="button"
-                                :class="tabToggleButtonClass('activity')"
-                                @click="activeTab = 'activity'"
-                            >
-                                <Icon name="carbon:activity" size="16" />
-                                Activity
-                            </button>
+                            <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
+                                <button
+                                    type="button"
+                                    :class="tabToggleButtonClass('profile')"
+                                    @click="activeTab = 'profile'"
+                                >
+                                    <Icon name="carbon:user" size="16" />
+                                    Profile
+                                </button>
+                                <button
+                                    type="button"
+                                    :class="tabToggleButtonClass('activity')"
+                                    @click="activeTab = 'activity'"
+                                >
+                                    <Icon name="carbon:activity" size="16" />
+                                    Activity
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -77,11 +75,7 @@
                 </div>
 
                 <div v-else-if="activeTab === 'activity'" class="space-y-4">
-	                    <div class="flex items-center justify-between gap-4 flex-wrap">
-	                        <div>
-	                            <h1 class="text-2xl font-bold text-slate-900">{{ accountName }} activities</h1>
-	                            <p class="text-sm text-slate-500 mt-1">Recent actions in projects and issues</p>
-	                        </div>
+                    <div class="flex items-center gap-4 flex-wrap">
                         <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
                             <button
                                 type="button"
