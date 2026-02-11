@@ -63,17 +63,18 @@
                 </NuxtLink>
             </nav>
             <div class="p-3 border-t border-slate-100 space-y-2">
-                <div class="flex items-center gap-2">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User"
-                        class="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
+                <button @click="goToProfile"
+                    class="w-full flex items-center gap-2 rounded-lg p-1 hover:bg-slate-50 transition-colors text-left"
+                    :title="isCollapsed ? userDisplayName : ''">
+                    <img :src="userAvatar" alt="User" class="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
                     <div :class="[
                         'overflow-hidden transition-all duration-300',
                         isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
                     ]">
-                        <p class="text-xs font-semibold text-slate-900 truncate">Oral Khan</p>
-                        <p class="text-[10px] text-slate-500 truncate">Pro Plan</p>
+                        <p class="text-xs font-semibold text-slate-900 truncate">{{ userDisplayName }}</p>
+                        <p class="text-[10px] text-slate-500 truncate">{{ userPlan }}</p>
                     </div>
-                </div>
+                </button>
                 <button @click="handleLogout" :class="[
                     'w-full flex items-center justify-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200',
                     'text-red-600 hover:bg-red-50 hover:text-red-700 text-xs font-medium',
@@ -128,6 +129,26 @@ const navItems = [
     { label: 'Projects', to: '/projects', icon: 'carbon:layers' },
 ];
 
+const userDisplayName = computed(() => {
+    return authStore.currentUser?.fullName || authStore.currentUser?.email || 'User';
+});
+
+const userPlan = computed(() => {
+    return authStore.currentUser?.plan || 'Member';
+});
+
+const userAvatar = computed(() => {
+    const avatarFromBackend = authStore.currentUser?.avatar;
+    if (avatarFromBackend) return avatarFromBackend;
+
+    const seed = encodeURIComponent(userDisplayName.value || 'User');
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+});
+
+const goToProfile = () => {
+    navigateTo('/profile');
+};
+
 const handleLogout = () => {
     authStore.logout();
 };
@@ -144,6 +165,10 @@ const openInviteModal = () => {
 const handleInviteSuccess = () => {
     // Optional: Show success toast/notification
 };
+
+if (authStore.isAuthenticated) {
+    await authStore.fetchCurrentUser();
+}
 </script>
 <style scoped>
 nav::-webkit-scrollbar {

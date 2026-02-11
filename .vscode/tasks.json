@@ -8,6 +8,15 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "Run Nuxt Dev on 4200",
+			"type": "shell",
+			"command": "npx nuxi dev -p 4200",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
