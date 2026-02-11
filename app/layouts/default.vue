@@ -163,7 +163,6 @@ const openInviteModal = () => {
 };
 
 const handleInviteSuccess = () => {
-    // Optional: Show success toast/notification
 };
 
 if (authStore.isAuthenticated) {

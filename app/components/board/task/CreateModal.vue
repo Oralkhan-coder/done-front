@@ -185,7 +185,6 @@ watch(
                         sprintStore.fetchProjectSprints(route.params.id),
                     ]);
                 } catch (error) {
-                    // Keep create form usable even when secondary data fails to load.
                 }
 
                 if (!formData.sprintId && sprintStore.activeSprint?.id) {

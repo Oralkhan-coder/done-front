@@ -230,65 +230,34 @@ const handleSubmit = async () => {
 
     isSubmitting.value = true;
     try {
+        const parsedStatusId = Number(formData.statusId);
+        const normalizedStatusId = Number.isFinite(parsedStatusId) ? parsedStatusId : formData.statusId;
         const normalizedSprintId = Number(formData.sprintId) > 0 ? Number(formData.sprintId) : 0;
+        const parsedAssigneeId = Number(formData.assigneeId);
+        const normalizedAssigneeId =
+            formData.assigneeId === null || formData.assigneeId === undefined || formData.assigneeId === ''
+                ? null
+                : Number.isFinite(parsedAssigneeId)
+                  ? parsedAssigneeId
+                  : formData.assigneeId;
         const requestBody = {
             title: formData.title,
             description: formData.description || '',
-            statusId: formData.statusId,
+            statusId: normalizedStatusId,
             priority: formData.priority,
             sprintId: normalizedSprintId,
         };
 
-        if (formData.assigneeId !== null && formData.assigneeId !== undefined) {
-            requestBody.assigneeId = formData.assigneeId;
+        if (normalizedAssigneeId !== null) {
+            requestBody.assigneeId = normalizedAssigneeId;
         }
         if (formData.storyPoint !== null && formData.storyPoint !== undefined) {
             requestBody.storyPoint = formData.storyPoint;
         }
 
         await taskStore.updateTask(props.task.id, requestBody);
-
-        const oldStatusId = props.task.statusId;
-        const newStatusId = formData.statusId;
-
-
-        if (oldStatusId !== newStatusId) {
-            const fromColumn = boardStore.board.find((col) => col.statusId === oldStatusId);
-            const toColumn = boardStore.board.find((col) => col.statusId === newStatusId);
-
-            if (fromColumn && toColumn) {
-                const taskIndex = fromColumn.tasks?.findIndex((t) => t.id === props.task.id);
-                if (taskIndex !== -1 && taskIndex !== undefined) {
-                    const task = fromColumn.tasks[taskIndex];
-                    fromColumn.tasks.splice(taskIndex, 1);
-
-                    if (!toColumn.tasks) toColumn.tasks = [];
-                    toColumn.tasks.push({
-                        ...task,
-                        ...requestBody,
-                        sprintId: normalizedSprintId || null,
-                        assignee: formData.assigneeId
-                            ? projectUsersStore.getUserById(formData.assigneeId)
-                            : null,
-                    });
-                }
-            }
-        } else {
-            boardStore.board.forEach((column) => {
-                if (column.tasks) {
-                    const taskIndex = column.tasks.findIndex((t) => t.id === props.task.id);
-                    if (taskIndex !== -1) {
-                        column.tasks[taskIndex] = {
-                            ...column.tasks[taskIndex],
-                            ...requestBody,
-                            sprintId: normalizedSprintId || null,
-                            assignee: formData.assigneeId
-                                ? projectUsersStore.getUserById(formData.assigneeId)
-                                : null,
-                        };
-                    }
-                }
-            });
+        if (route.params.id) {
+            await boardStore.getBoard(route.params.id);
         }
 
         resetForm();
@@ -316,7 +285,6 @@ watch(
                         sprintStore.fetchProjectSprints(route.params.id),
                     ]);
                 } catch (error) {
-                    // Keep modal usable even if some side data fails to load.
                 }
             }
 

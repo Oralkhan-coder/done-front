@@ -388,7 +388,6 @@ const startSprint = async (sprint) => {
     try {
         await sprintStore.updateSprint(projectId.value, sprint.id, buildUpdatePayload(sprint, 'active'));
     } catch (error) {
-        // Error is already stored in sprintStore.error.
     } finally {
         actionLoading.startId = null;
     }
@@ -403,7 +402,6 @@ const completeSprint = async (sprint) => {
     try {
         await sprintStore.updateSprint(projectId.value, sprint.id, buildUpdatePayload(sprint, 'closed'));
     } catch (error) {
-        // Error is already stored in sprintStore.error.
     } finally {
         actionLoading.completeId = null;
     }
@@ -421,7 +419,6 @@ const removeSprint = async (sprint) => {
     try {
         await sprintStore.deleteSprint(projectId.value, sprint.id);
     } catch (error) {
-        // Error is already stored in sprintStore.error.
     } finally {
         actionLoading.deleteId = null;
     }
@@ -436,7 +433,6 @@ const loadSprints = async (force = false) => {
     try {
         await sprintStore.fetchProjectSprints(projectId.value, { force });
     } catch (error) {
-        // Error is already stored in sprintStore.error.
     }
 };
 
