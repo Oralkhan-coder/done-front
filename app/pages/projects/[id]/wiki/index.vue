@@ -133,12 +133,7 @@
                         <label class="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
                             Content
                         </label>
-                        <textarea
-                            v-model="form.content"
-                            rows="12"
-                            placeholder="Write your notes here..."
-                            class="w-full flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 resize-none min-h-[240px]"
-                        ></textarea>
+                        <RichTextEditor v-model="form.content" />
                     </div>
 
                     <div v-if="formError" class="text-sm text-red-600">{{ formError }}</div>
@@ -153,6 +148,8 @@
 </template>
 
 <script setup>
+import RichTextEditor from '~/components/editor/RichTextEditor.vue';
+
 definePageMeta({
     layout: 'projectheader',
 });

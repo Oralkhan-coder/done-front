@@ -143,7 +143,6 @@ const openInviteModal = () => {
 
 const handleInviteSuccess = () => {
     // Optional: Show success toast/notification
-    console.log('User invited successfully');
 };
 </script>
 <style scoped>
