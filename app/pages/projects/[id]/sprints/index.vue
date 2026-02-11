@@ -1,10 +1,6 @@
 <template>
     <div class="sprints-page">
         <div class="page-header">
-            <div>
-                <h2 class="title">Sprints</h2>
-                <p class="subtitle">Manage sprint cycles for this project</p>
-            </div>
             <Button
                 label="Create New"
                 icon="carbon:add"
