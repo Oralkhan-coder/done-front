@@ -1,53 +1,520 @@
 <template>
-    <div class="space-y-6">
-
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-slate-900">Backlog</h2>
-                <p class="text-sm text-slate-500 mt-1">Plan and prioritize your project tasks</p>
-            </div>
-            <Button label="Create Issue" icon="carbon:add" size="small"
-                class="bg-indigo-600 border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700" />
+    <div class="backlog-page">
+        <div class="backlog-header">
+            <h2 class="backlog-title">Backlog Issues</h2>
+            <button type="button" class="refresh-btn" :disabled="isLoading" @click="fetchBacklog">
+                <Icon name="carbon:renew" size="14" :class="{ spinning: isLoading }" />
+                <span>Refresh</span>
+            </button>
         </div>
 
+        <div v-if="isLoading" class="state">
+            <Icon name="carbon:renew" size="18" class="spinning" />
+            <span>Loading backlog...</span>
+        </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div v-else-if="errorMessage" class="state error">
+            <Icon name="carbon:warning" size="16" />
+            <span>{{ errorMessage }}</span>
+        </div>
 
-            <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
-                    <Icon name="carbon:list" size="32" class="text-indigo-600" />
+        <div v-else class="table-wrap">
+            <table class="backlog-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>StoryPoint</th>
+                        <th>Labels</th>
+                        <th>Parent</th>
+                        <th>TypeId</th>
+                        <th>CreateDate</th>
+                        <th>Assignee</th>
+                    </tr>
+                </thead>
+                <tbody v-if="rows.length > 0">
+                    <tr v-for="task in rows" :key="task.id">
+                        <td>{{ task.code || `TASK-${task.id}` }}</td>
+                        <td>{{ task.title || '-' }}</td>
+                        <td>{{ getStatusTitle(task.statusId) }}</td>
+                        <td>{{ task.storyPoint > 0 ? task.storyPoint : '-' }}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>{{ resolveType(task) }}</td>
+                        <td>{{ task.createdAt ? formatTime(task.createdAt) : '-' }}</td>
+                        <td>{{ getAssigneeTitle(task) }}</td>
+                    </tr>
+                </tbody>
+                <tbody v-else>
+                    <tr>
+                        <td colspan="9" class="empty-cell">No backlog issues yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="add-issue-btn" @click="openCreateModal">
+            <Icon name="carbon:add" size="20" />
+            <span>Backlog Issue</span>
+        </button>
+
+        <Dialog v-model:visible="showCreateModal" modal header="Create Backlog Issue" :style="{ width: '36rem' }">
+            <form class="create-form" @submit.prevent="handleCreateTask">
+                <div class="field">
+                    <label for="title">Title</label>
+                    <InputText id="title" v-model="form.title" placeholder="Issue title" class="w-full" />
                 </div>
-                <h3 class="text-lg font-semibold text-slate-900">Your backlog is empty</h3>
-                <p class="text-slate-500 max-w-sm mt-2 mb-6">
-                    Start adding issues to your backlog to plan and organize your project work.
-                </p>
-                <Button label="Create your first issue" icon="carbon:add" size="small" outlined
-                    class="border-indigo-600 text-indigo-600 hover:bg-indigo-50" />
-            </div>
-        </div>
 
-
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex gap-3">
-                <Icon name="carbon:information" size="20" class="text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                    <h4 class="text-sm font-semibold text-blue-900">About Backlog</h4>
-                    <p class="text-sm text-blue-700 mt-1">
-                        The backlog is where you manage all your project's work items. Create, prioritize, and organize
-                        issues before moving them to your board.
-                    </p>
+                <div class="field">
+                    <label for="description">Description</label>
+                    <Textarea id="description" v-model="form.description" rows="4" class="w-full" />
                 </div>
-            </div>
-        </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="status">Status</label>
+                        <Select
+                            id="status"
+                            v-model="form.statusId"
+                            :options="statusesForDropdown"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Select status"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <div class="field">
+                        <label for="storyPoint">StoryPoint</label>
+                        <InputNumber id="storyPoint" v-model="form.storyPoint" :min="0" class="w-full" />
+                    </div>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="priority">Priority</label>
+                        <Select
+                            id="priority"
+                            v-model="form.priority"
+                            :options="priorityOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <div class="field">
+                        <label for="assignee">Assignee</label>
+                        <Select
+                            id="assignee"
+                            v-model="form.assigneeId"
+                            :options="assigneeOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-full"
+                        />
+                    </div>
+                </div>
+
+                <p v-if="formError" class="form-error">{{ formError }}</p>
+
+                <div class="actions">
+                    <Button type="button" label="Cancel" severity="secondary" outlined @click="showCreateModal = false" />
+                    <Button type="submit" :label="isSubmitting ? 'Creating...' : 'Create Issue'" :loading="isSubmitting" />
+                </div>
+            </form>
+        </Dialog>
     </div>
 </template>
 
 <script setup>
+import formatTime from '~/utils/formatTime';
+
 definePageMeta({
     layout: 'projectheader',
 });
 
 const route = useRoute();
+const { $api } = useNuxtApp();
+const statusStore = useStatusStore();
+const projectUsersStore = useProjectUsersStore();
+
+const isLoading = ref(false);
+const isSubmitting = ref(false);
+const errorMessage = ref('');
+const formError = ref('');
+const rows = ref([]);
+const showCreateModal = ref(false);
+
+const form = reactive({
+    title: '',
+    description: '',
+    statusId: null,
+    storyPoint: null,
+    priority: 'medium',
+    assigneeId: null,
+});
+
+const priorityOptions = [
+    { label: 'Low', value: 'low' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'High', value: 'high' },
+    { label: 'Critical', value: 'critical' },
+];
+
+const statusesForDropdown = computed(() =>
+    statusStore.statuses.map((status) => ({
+        label: status.title,
+        value: status.id,
+    })),
+);
+
+const assigneeOptions = computed(() => projectUsersStore.getUsersForDropdown(true));
+
+const getStatusTitle = (statusId) => {
+    const status = statusStore.getStatusById(Number(statusId));
+    return status?.title || `Status #${statusId}`;
+};
+
+const getAssigneeTitle = (task) => {
+    const assigneeId = Number(task.assigneeId);
+    if (!assigneeId) {
+        return 'unassigned';
+    }
+
+    const user = projectUsersStore.getUserById(assigneeId);
+    return user?.name || `User #${assigneeId}`;
+};
+
+const resolveType = (task) => {
+    if (typeof task?.type === 'string' && task.type.trim()) {
+        return task.type.charAt(0).toUpperCase() + task.type.slice(1);
+    }
+    return 'Task';
+};
+
+const toTaskArray = (response) => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.items)) return response.items;
+    if (Array.isArray(response?.tasks)) return response.tasks;
+    return [];
+};
+
+const normalizeTask = (task) => ({
+    id: task?.id,
+    code: task?.code || '',
+    title: task?.title || '',
+    statusId: task?.statusId || task?.statusID || 0,
+    storyPoint: task?.storyPoint || 0,
+    createdAt: task?.createdAt || '',
+    assigneeId: task?.assigneeId || task?.assignee?.id || task?.assignee?.userId || null,
+    type: task?.type || '',
+    sprintId: task?.sprintId || task?.sprintID || null,
+});
+
+const resetForm = () => {
+    form.title = '';
+    form.description = '';
+    form.statusId = statusesForDropdown.value[0]?.value || null;
+    form.storyPoint = null;
+    form.priority = 'medium';
+    form.assigneeId = null;
+    formError.value = '';
+};
+
+const fetchBacklog = async () => {
+    const projectId = Number(route.params.id);
+    if (!projectId) {
+        rows.value = [];
+        return;
+    }
+
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    try {
+        const [tasksResult, statusesResult, usersResult] = await Promise.allSettled([
+            $api(`/projects/${projectId}/tasks`),
+            statusStore.fetchStatuses(projectId),
+            projectUsersStore.fetchProjectUsers(projectId),
+        ]);
+
+        if (statusesResult.status === 'rejected') {
+            // Backlog remains usable with fallback status labels.
+        }
+
+        if (usersResult.status === 'rejected') {
+            // Assignee column falls back to user IDs.
+        }
+
+        if (tasksResult.status !== 'fulfilled') {
+            throw tasksResult.reason;
+        }
+
+        const allTasks = toTaskArray(tasksResult.value).map(normalizeTask);
+        const backlogTasks = allTasks.filter((task) => !task.sprintId || Number(task.sprintId) === 0);
+
+        backlogTasks.sort((a, b) => {
+            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return bTime - aTime;
+        });
+
+        rows.value = backlogTasks;
+
+        if (!form.statusId) {
+            form.statusId = statusesForDropdown.value[0]?.value || null;
+        }
+    } catch (error) {
+        rows.value = [];
+        errorMessage.value = error?.data?.message || error?.message || 'Failed to load backlog';
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const openCreateModal = () => {
+    resetForm();
+    showCreateModal.value = true;
+};
+
+const handleCreateTask = async () => {
+    const projectId = Number(route.params.id);
+    formError.value = '';
+
+    if (!form.title.trim()) {
+        formError.value = 'Title is required.';
+        return;
+    }
+
+    if (!form.statusId) {
+        formError.value = 'Status is required.';
+        return;
+    }
+
+    isSubmitting.value = true;
+    try {
+        const payload = {
+            title: form.title.trim(),
+            statusId: Number(form.statusId),
+            priority: form.priority,
+        };
+
+        if (form.description.trim()) {
+            payload.description = form.description.trim();
+        }
+        if (form.assigneeId) {
+            payload.assigneeId = Number(form.assigneeId);
+        }
+        if (form.storyPoint !== null && form.storyPoint !== undefined) {
+            payload.storyPoint = Number(form.storyPoint);
+        }
+
+        await $api(`/projects/${projectId}/tasks`, {
+            method: 'POST',
+            body: payload,
+        });
+
+        showCreateModal.value = false;
+        await fetchBacklog();
+    } catch (error) {
+        formError.value = error?.data?.message || error?.message || 'Failed to create issue.';
+    } finally {
+        isSubmitting.value = false;
+    }
+};
+
+await fetchBacklog();
 </script>
 
-<style scoped></style>
+<style scoped>
+.backlog-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.backlog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.backlog-title {
+    margin: 0;
+    font-size: 44px;
+    line-height: 1;
+    color: #102a54;
+    font-weight: 700;
+}
+
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #d8dee9;
+    background: #ffffff;
+    color: #243b63;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.table-wrap {
+    border: 1px solid #dce3ef;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.backlog-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.backlog-table th,
+.backlog-table td {
+    text-align: left;
+    padding: 16px 18px;
+    color: #2b4164;
+}
+
+.backlog-table thead th {
+    background: #f2f5fa;
+    border-bottom: 2px solid #2e3f59;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.backlog-table tbody td {
+    font-size: 14px;
+    border-top: 1px solid #e6ebf3;
+}
+
+.empty-cell {
+    text-align: center;
+    color: #6f7f99;
+    font-size: 14px !important;
+    padding: 24px !important;
+}
+
+.add-issue-btn {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    color: #0f62fe;
+    font-size: 32px;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+}
+
+.state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border: 1px dashed var(--surface-300);
+    border-radius: 8px;
+    color: var(--surface-500);
+    font-size: 14px;
+}
+
+.state.error {
+    border-color: #fecaca;
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334e7d;
+}
+
+.field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.form-error {
+    margin: 0;
+    font-size: 13px;
+    color: #dc2626;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1024px) {
+    .backlog-title {
+        font-size: 28px;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    .backlog-table thead th {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .backlog-table tbody td {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .add-issue-btn {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 640px) {
+    .field-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
