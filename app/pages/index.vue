@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
-                <p class="text-slate-500 mt-1">Welcome back, Oral Khan. Here's what's happening today.</p>
+                <p class="text-slate-500 mt-1">Welcome back, {{ displayName }}. Here's what's happening today.</p>
             </div>
             <div class="flex gap-3">
                 <Button
@@ -143,4 +143,14 @@
         </div>
     </div>
 </template>
-<script setup></script>
+<script setup>
+const authStore = useAuthStore();
+
+const displayName = computed(() => {
+    return authStore.currentUser?.fullName || authStore.currentUser?.email || 'User';
+});
+
+if (authStore.isAuthenticated) {
+    await authStore.fetchCurrentUser();
+}
+</script>
